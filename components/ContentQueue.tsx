@@ -1,0 +1,114 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Trash2, FileText } from "lucide-react"
+import { ContentCreationFlow } from "./ContentCreationFlow"
+import { Checkbox } from "@/components/ui/checkbox"
+
+interface ContentQueueProps {
+  queueItems: Array<{ id: string; type: string; name: string; source: string }>
+  onClearQueue: () => void
+}
+
+export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
+  const [showContentCreationFlow, setShowContentCreationFlow] = useState(false)
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
+    queueItems.reduce((acc, item) => ({ ...acc, [item.id]: true }), {}),
+  )
+
+  const handleConfigureContentCreation = () => {
+    const selectedItems = queueItems.filter((item) => checkedItems[item.id])
+    setShowContentCreationFlow(true)
+  }
+
+  const handleCloseContentCreationFlow = () => {
+    setShowContentCreationFlow(false)
+  }
+
+  const handleCheckChange = (id: string, checked: boolean) => {
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }))
+  }
+
+  return (
+    <div className="space-y-6">
+      {showContentCreationFlow ? (
+        <ContentCreationFlow onClose={handleCloseContentCreationFlow} selectedItems={queueItems} />
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center">
+              <FileText className="w-5 h-5 mr-2" />
+              Content Queue
+            </CardTitle>
+            {queueItems.length > 0 && (
+              <Button
+                onClick={onClearQueue}
+                variant="outline"
+                size="sm"
+                className="text-red-500 border-red-200 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Queue
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-4">
+            {queueItems.length > 0 ? (
+              <div className="space-y-4">
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 text-left w-10"></th>
+                        <th className="px-4 py-2 text-left">Item</th>
+                        <th className="px-4 py-2 text-left">Type</th>
+                        <th className="px-4 py-2 text-left">Source</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {queueItems.map((item) => (
+                        <tr key={item.id}>
+                          <td className="px-4 py-2">
+                            <Checkbox
+                              id={`check-${item.id}`}
+                              checked={checkedItems[item.id]}
+                              onCheckedChange={(checked) => handleCheckChange(item.id, checked as boolean)}
+                            />
+                          </td>
+                          <td className="px-4 py-2 font-medium">{item.name}</td>
+                          <td className="px-4 py-2">{item.type}</td>
+                          <td className="px-4 py-2">{item.source}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Button
+                    className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90"
+                    onClick={handleConfigureContentCreation}
+                  >
+                    Continue & Configure Content Creation with Checked
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-gray-100 rounded-full p-6 inline-block mb-4">
+                  <FileText className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Items in Queue</h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  Select items from the research tabs to add them to your content queue for further processing and
+                  content creation.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
