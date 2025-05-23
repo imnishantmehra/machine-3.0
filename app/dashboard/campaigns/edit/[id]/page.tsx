@@ -40,6 +40,7 @@ import { AuthorMimicry } from "@/components/AuthorMimicry";
 import { TrendingOnX } from "@/components/TrendingOnX";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { getCampaignsById } from "@/components/Service";
 
 // Sample campaigns data - in a real app, this would come from an API or database
 const SAMPLE_CAMPAIGNS: Campaign[] = [
@@ -144,7 +145,6 @@ export default function EditCampaignPage() {
   const router = useRouter();
   const params = useParams();
   const campaignId = params.id as string;
-
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ isOpen: boolean; message: string }>({
@@ -313,50 +313,73 @@ export default function EditCampaignPage() {
   ];
 
   useEffect(() => {
+    console.log("zsdf");
+    if (!campaignId) return;
     // In a real app, this would be an API call
-    const fetchCampaign = () => {
+    const fetchCampaign = async () => {
+      console.log("zsdczsc");
       setIsLoading(true);
       try {
-        // For demo purposes, check if the ID is "new-trending-campaign" and create a mock trending campaign
-        if (campaignId === "new-trending-campaign") {
-          const newCampaign = {
-            id: "new-trending-campaign",
-            name: "New Trending Campaign",
-            description: "Campaign created from trending topics on X",
-            type: "trending" as const,
-            trendingTopics: [
-              "#DigitalMarketing",
-              "Content Strategy",
-              "Social Media Analytics",
-            ],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          setCampaign(newCampaign);
-          setCampaignName(newCampaign.name);
-          setCampaignDescription(newCampaign.description);
-          setCampaignType(newCampaign.type);
-          setTrendingTopics(newCampaign.trendingTopics || []);
+
+        const editableCampaigns = await getCampaignsById(campaignId);
+
+        if (editableCampaigns.status === "success") {
+          const editableCampaignsFound = editableCampaigns.message.raw_data[0]
+          console.log("editableCampaignsFound", editableCampaignsFound);
+          setCampaign(editableCampaignsFound);
+          setCampaignName(editableCampaignsFound.campaign_name);
+          setCampaignDescription(editableCampaignsFound.query);
+          setCampaignType(editableCampaignsFound.type || "");
+          setKeywords(editableCampaigns.message.keywords || []);
+          setUrls(editableCampaignsFound.urls || []);
+          setTrendingTopics(editableCampaignsFound.trending_content || []);
         } else {
-          const foundCampaign = SAMPLE_CAMPAIGNS.find(
-            (c) => c.id === campaignId
-          );
-          if (foundCampaign) {
-            setCampaign(foundCampaign);
-            setCampaignName(foundCampaign.name);
-            setCampaignDescription(foundCampaign.description);
-            setCampaignType(foundCampaign.type);
-            setKeywords(foundCampaign.keywords || []);
-            setUrls(foundCampaign.urls || []);
-            setTrendingTopics(foundCampaign.trendingTopics || []);
-          } else {
-            setError({
-              isOpen: true,
-              message:
-                "Campaign not found. Please try again or create a new campaign.",
-            });
-          }
+          setError({
+            isOpen: true,
+            message:
+              "Campaign not found. Please try again or create a new campaign.",
+          });
         }
+        // if (campaignId === "new-trending-campaign") {
+        //   const newCampaign = {
+        //     id: "new-trending-campaign",
+        //     name: "New Trending Campaign",
+        //     description: "Campaign created from trending topics on X",
+        //     type: "trending" as const,
+        //     trendingTopics: [
+        //       "#DigitalMarketing",
+        //       "Content Strategy",
+        //       "Social Media Analytics",
+        //     ],
+        //     createdAt: new Date(),
+        //     updatedAt: new Date(),
+        //   };
+        //   setCampaign(newCampaign);
+        //   setCampaignName(newCampaign.name);
+        //   setCampaignDescription(newCampaign.description);
+        //   setCampaignType(newCampaign.type);
+        //   setTrendingTopics(newCampaign.trendingTopics || []);
+        // } else {
+        //   const foundCampaign = SAMPLE_CAMPAIGNS.find(
+        //     (c) => c.id === campaignId
+        //   );
+        //   if (foundCampaign) {
+        //     setCampaign(foundCampaign);
+        //     setCampaignName(foundCampaign.name);
+        //     setCampaignDescription(foundCampaign.description);
+        //     setCampaignType(foundCampaign.type);
+        //     setKeywords(foundCampaign.keywords || []);
+        //     setUrls(foundCampaign.urls || []);
+        //     setTrendingTopics(foundCampaign.trendingTopics || []);
+        //   } else {
+        //     setError({
+        //       isOpen: true,
+        //       message:
+        //         "Campaign not found. Please try again or create a new campaign.",
+        //     });
+        //   }
+        // }
+        console.log("dfg");
       } catch (err) {
         setError({
           isOpen: true,
@@ -465,7 +488,7 @@ export default function EditCampaignPage() {
         new URL(urlToAdd);
 
         // If validation passes, add the URL
-        setUrls([...urls, urlToAdd]);
+        setUrls((PrevUrls) => [...PrevUrls, urlToAdd]);
         setUrlInput("");
       } catch (e) {
         setError({
@@ -647,6 +670,8 @@ export default function EditCampaignPage() {
     );
   }
 
+
+
   return (
     <div className="min-h-screen bg-[#7A99A8]">
       <Header />
@@ -691,8 +716,8 @@ export default function EditCampaignPage() {
                 {campaign.type === "keyword"
                   ? "Keywords"
                   : campaign.type === "url"
-                  ? "URLs"
-                  : "Trending"}
+                    ? "URLs"
+                    : "Trending"}
               </span>
             </CardTitle>
           </CardHeader>
@@ -893,7 +918,7 @@ export default function EditCampaignPage() {
                             <div className="border rounded-md p-4">
                               <Label className="mb-2 block">URLs:</Label>
                               <div className="space-y-2">
-                                {urls.map((url, index) => (
+                                {urls?.map((url, index) => (
                                   <div
                                     key={index}
                                     className="flex items-center justify-between bg-secondary text-secondary-foreground p-2 rounded"

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { getAllCampaigns } from "@/components/Service";
+import { toast } from "sonner";
 
 // Sample author profiles for demonstration
 const SAMPLE_AUTHOR_PROFILES = [
@@ -133,83 +135,84 @@ const PLATFORMS = [
   { name: "TikTok", icon: Music },
 ];
 
+
 // Sample campaigns data
-const SAMPLE_CAMPAIGNS: Campaign[] = [
-  // {
-  //   id: "campaign-1",
-  //   name: "Q1 Marketing Strategy",
-  //   description: "Content strategy for Q1 product launches and promotions",
-  //   type: "keyword",
-  //   keywords: [
-  //     "product launch",
-  //     "spring promotion",
-  //     "new features",
-  //     "customer testimonials",
-  //   ],
-  //   urls: [
-  //     "https://competitor1.com/blog",
-  //     "https://competitor2.com/products",
-  //     "https://competitor3.com/features",
-  //   ],
-  //   createdAt: new Date("2025-01-15"),
-  //   updatedAt: new Date("2025-01-20"),
-  // },
-  // {
-  //   id: "campaign-2",
-  //   name: "Competitor Analysis",
-  //   description: "Analysis of competitor content and positioning",
-  //   type: "url",
-  //   urls: [
-  //     "https://competitor1.com/blog",
-  //     "https://competitor2.com/products",
-  //     "https://competitor3.com/features",
-  //   ],
-  //   createdAt: new Date("2025-02-01"),
-  //   updatedAt: new Date("2025-02-10"),
-  // },
-  // {
-  //   id: "campaign-3",
-  //   name: "Industry Trends 2025",
-  //   description: "Research on emerging industry trends for content planning",
-  //   type: "keyword",
-  //   keywords: [
-  //     "industry trends",
-  //     "future technology",
-  //     "market predictions",
-  //     "innovation",
-  //   ],
-  //   createdAt: new Date("2025-02-15"),
-  //   updatedAt: new Date("2025-02-18"),
-  // },
-  // {
-  //   id: "campaign-4",
-  //   name: "Customer Success Stories",
-  //   description:
-  //     "Collection of customer success stories for content repurposing",
-  //   type: "url",
-  //   urls: [
-  //     "https://ourwebsite.com/case-studies/customer1",
-  //     "https://ourwebsite.com/case-studies/customer2",
-  //     "https://ourwebsite.com/testimonials",
-  //   ],
-  //   createdAt: new Date("2025-03-01"),
-  //   updatedAt: new Date("2025-03-05"),
-  // },
-  // {
-  //   id: "campaign-5",
-  //   name: "X Trends Analysis",
-  //   description: "Analysis of trending topics on X for content strategy",
-  //   type: "trending",
-  //   trendingTopics: [
-  //     "AI ethics",
-  //     "sustainable tech",
-  //     "remote work culture",
-  //     "digital wellness",
-  //   ],
-  //   createdAt: new Date("2025-03-10"),
-  //   updatedAt: new Date("2025-03-10"),
-  // },
-];
+// const SAMPLE_CAMPAIGNS: Campaign[] = [
+// {
+//   id: "campaign-1",
+//   name: "Q1 Marketing Strategy",
+//   description: "Content strategy for Q1 product launches and promotions",
+//   type: "keyword",
+//   keywords: [
+//     "product launch",
+//     "spring promotion",
+//     "new features",
+//     "customer testimonials",
+//   ],
+//   urls: [
+//     "https://competitor1.com/blog",
+//     "https://competitor2.com/products",
+//     "https://competitor3.com/features",
+//   ],
+//   createdAt: new Date("2025-01-15"),
+//   updatedAt: new Date("2025-01-20"),
+// },
+// {
+//   id: "campaign-2",
+//   name: "Competitor Analysis",
+//   description: "Analysis of competitor content and positioning",
+//   type: "url",
+//   urls: [
+//     "https://competitor1.com/blog",
+//     "https://competitor2.com/products",
+//     "https://competitor3.com/features",
+//   ],
+//   createdAt: new Date("2025-02-01"),
+//   updatedAt: new Date("2025-02-10"),
+// },
+// {
+//   id: "campaign-3",
+//   name: "Industry Trends 2025",
+//   description: "Research on emerging industry trends for content planning",
+//   type: "keyword",
+//   keywords: [
+//     "industry trends",
+//     "future technology",
+//     "market predictions",
+//     "innovation",
+//   ],
+//   createdAt: new Date("2025-02-15"),
+//   updatedAt: new Date("2025-02-18"),
+// },
+// {
+//   id: "campaign-4",
+//   name: "Customer Success Stories",
+//   description:
+//     "Collection of customer success stories for content repurposing",
+//   type: "url",
+//   urls: [
+//     "https://ourwebsite.com/case-studies/customer1",
+//     "https://ourwebsite.com/case-studies/customer2",
+//     "https://ourwebsite.com/testimonials",
+//   ],
+//   createdAt: new Date("2025-03-01"),
+//   updatedAt: new Date("2025-03-05"),
+// },
+// {
+//   id: "campaign-5",
+//   name: "X Trends Analysis",
+//   description: "Analysis of trending topics on X for content strategy",
+//   type: "trending",
+//   trendingTopics: [
+//     "AI ethics",
+//     "sustainable tech",
+//     "remote work culture",
+//     "digital wellness",
+//   ],
+//   createdAt: new Date("2025-03-10"),
+//   updatedAt: new Date("2025-03-10"),
+// },
+// ];
 
 export default function Dashboard() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -237,7 +240,8 @@ export default function Dashboard() {
   const stepTwoRef = useRef<HTMLDivElement>(null);
   const stepThreeRef = useRef<HTMLDivElement>(null);
 
-  const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
+  // const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
+  const [campaigns, setCampaigns] = useState<Campaign[]>();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
@@ -254,8 +258,8 @@ export default function Dashboard() {
     viewParam === "workflow"
       ? "workflow"
       : viewParam === "settings"
-      ? "settings"
-      : "campaigns"
+        ? "settings"
+        : "campaigns"
   );
 
   const [showContentPlanner, setShowContentPlanner] = useState(
@@ -415,7 +419,8 @@ export default function Dashboard() {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    setCampaigns([...campaigns, newCampaign]);
+
+    setCampaigns(prev => [...(prev ?? []), newCampaign]); // ✅ Safe spreading
     setSelectedCampaign(newCampaign);
     setContentPlannerTab("workflow");
   };
@@ -425,7 +430,7 @@ export default function Dashboard() {
     updatedCampaign: Partial<Campaign>
   ) => {
     setCampaigns(
-      campaigns.map((campaign) =>
+      campaigns?.map((campaign) =>
         campaign.id === id
           ? { ...campaign, ...updatedCampaign, updatedAt: new Date() }
           : campaign
@@ -440,7 +445,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter((campaign) => campaign.id !== id));
+    setCampaigns(campaigns?.filter((campaign) => campaign.id !== id));
     if (selectedCampaign?.id === id) {
       setSelectedCampaign(null);
     }
@@ -468,8 +473,7 @@ export default function Dashboard() {
   const handleSelectProfile = () => {
     if (checkedProfiles.length === 1) {
       alert(
-        `Profile "${
-          savedProfiles.find((p) => p.id === checkedProfiles[0])?.name
+        `Profile "${savedProfiles.find((p) => p.id === checkedProfiles[0])?.name
         }" selected for use`
       );
       setCheckedProfiles([]);
@@ -498,8 +502,8 @@ export default function Dashboard() {
               tabParam === "content-planner"
                 ? "content-planner"
                 : tabParam === "podcast-tools"
-                ? "podcast-tools"
-                : "content-planner"
+                  ? "podcast-tools"
+                  : "content-planner"
             }
             className="w-full"
           >
@@ -616,9 +620,8 @@ export default function Dashboard() {
                               key={day}
                               value={day}
                               aria-label={day}
-                              className={`px-3 py-2 flex-1 justify-center day-button ${
-                                activeDays.includes(day) ? "active-day" : ""
-                              }`}
+                              className={`px-3 py-2 flex-1 justify-center day-button ${activeDays.includes(day) ? "active-day" : ""
+                                }`}
                             >
                               {day}
                             </ToggleGroupItem>
@@ -641,11 +644,10 @@ export default function Dashboard() {
                                 <ToggleGroupItem
                                   value={platform.name}
                                   aria-label={platform.name}
-                                  className={`p-2 flex-1 justify-center platform-button ${
-                                    activePlatforms.includes(platform.name)
-                                      ? "active-platform"
-                                      : ""
-                                  }`}
+                                  className={`p-2 flex-1 justify-center platform-button ${activePlatforms.includes(platform.name)
+                                    ? "active-platform"
+                                    : ""
+                                    }`}
                                 >
                                   <platform.icon className="w-6 h-6" />
                                 </ToggleGroupItem>
@@ -739,9 +741,8 @@ export default function Dashboard() {
                                   newMainIdeas[weekIndex] = e.target.value;
                                   setMainIdeas(newMainIdeas);
                                 }}
-                                placeholder={`Main Idea for Week ${
-                                  weekIndex + 1
-                                }`}
+                                placeholder={`Main Idea for Week ${weekIndex + 1
+                                  }`}
                                 className="flex-grow"
                               />
                               <Button
@@ -940,7 +941,7 @@ export default function Dashboard() {
 
                       <TabsContent value="campaigns">
                         <ContentPlannerCampaign
-                          campaigns={campaigns}
+                          campaigns={campaigns && campaigns.length > 0 ? campaigns : []}
                           onAddCampaign={handleAddCampaign}
                           onEditCampaign={handleEditCampaign}
                           onDeleteCampaign={handleDeleteCampaign}

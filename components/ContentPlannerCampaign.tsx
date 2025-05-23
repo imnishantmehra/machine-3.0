@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -28,6 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { deleteCampaignsById, getAllCampaigns, getTrendingContent } from "./Service";
+import { toast } from "sonner";
 
 export interface Campaign {
   id: string;
@@ -101,6 +103,7 @@ export function ContentPlannerCampaign({
     message: "",
   });
   const [isSettingsMode, setIsSettingsMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   console.log("settings", settings);
   const [extractionSettings, setExtractionSettings] = useState({
     webScrapingDepth: 2,
@@ -202,7 +205,7 @@ export function ContentPlannerCampaign({
           urlToAdd = "https://" + urlToAdd;
         }
         new URL(urlToAdd);
-        setUrls([...urls, urlToAdd]);
+        setUrls(prevState => [...prevState, urlToAdd]);
         setUrlInput("");
       } catch (e) {
         setError({
@@ -334,7 +337,7 @@ export function ContentPlannerCampaign({
   };
 
   const confirmMergeCampaigns = () => {
-    const selectedCampaignData = settings.filter((campaign) =>
+    const selectedCampaignData = settings?.filter((campaign) =>
       selectedCampaigns.includes(campaign.id)
     );
     const mergedCampaignNames = selectedCampaignData
@@ -388,6 +391,104 @@ export function ContentPlannerCampaign({
     setIsMergeMode(false);
     setSelectedCampaigns([]);
   };
+
+  //call the API to get all the campaigns at once.
+  useEffect(() => {
+    const getAllCampaign = async () => {
+      setIsLoading(true)
+      try {
+        const response = await getAllCampaigns();
+        if (response.status === "success") {
+          console.log("object", response.message);
+          setSettings(response.message.campaigns);
+        } else {
+          console.error("API Error Details:", JSON.stringify(response, null, 2));
+          throw new Error(response.message || "Failed to analyze trends");
+        }
+      } catch (error) {
+        console.error("Error building campaign:", error);
+        // toast({
+        //   variant: "destructive",
+        //   title: "Error Building Campaign",
+        //   description:
+        //     error instanceof Error
+        //       ? error.message
+        //       : "An unexpected error occurred.",
+        // });
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    getAllCampaign();
+  }, [])
+
+
+  const deleteCampaign = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const response = await deleteCampaignsById(id);
+      console.log("Delete response:", response);
+
+      if (response.status === "success") {
+        // ✅ Remove the deleted campaign from state
+        setSettings(prevCampaigns =>
+          prevCampaigns.filter(campaign => campaign.id !== id)
+        );
+      } else {
+        setError({
+          isOpen: true,
+          message: "Error in deleting: Campaign couldn't be deleted",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      setError({
+        isOpen: true,
+        message: "Unexpected error occurred while deleting campaign.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const searchTrendingTrend = async (query: string) => {
+    console.log("searchTrendingTrend");
+    try {
+      const response = await getTrendingContent(query);
+
+      if (response.status === "success") {
+        console.log("Trending content fetched successfully:", response.message);
+        setTrendingTopics(response.message);
+      } else {
+        console.error("API Error Details:", JSON.stringify(response, null, 2));
+        throw new Error(response.message || "Failed to fetch trending content");
+      }
+    } catch (error) {
+      console.error("Error fetching trending content:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#7A99A8]">
+        <main className="p-6 max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-4xl font-extrabold text-white">
+              Loading campaigns...
+            </h1>
+          </div>
+          <Card>
+            <CardContent className="p-6 flex justify-center items-center min-h-[400px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  console.log("trendingTopics", trendingTopics);
 
   return (
     <div className="space-y-6">
@@ -601,17 +702,19 @@ export function ContentPlannerCampaign({
                           placeholder="Enter keyword to find trending topics"
                         />
                         <Button
-                          onClick={() => {
-                            if (trendingKeyword.trim()) {
-                              const mockTrendingTopics = [
-                                `#${trendingKeyword}Trends`,
-                                `${trendingKeyword} News`,
-                                `${trendingKeyword} Updates`,
-                                `${trendingKeyword} 2025`,
-                              ];
-                              setTrendingTopics(mockTrendingTopics);
-                            }
-                          }}
+                          //   onClick={() => {
+                          //     if (trendingKeyword.trim()) {
+                          //       const mockTrendingTopics = [
+                          //         `#${trendingKeyword}Trends`,
+                          //         `${trendingKeyword} News`,
+                          //         `${trendingKeyword} Updates`,
+                          //         `${trendingKeyword} 2025`,
+                          //       ];
+                          //       setTrendingTopics(mockTrendingTopics);
+                          //     }
+                          //   }
+                          // }
+                          onClick={() => searchTrendingTrend(trendingKeyword)}
                         >
                           Search
                         </Button>
@@ -620,12 +723,12 @@ export function ContentPlannerCampaign({
                         <div className="border rounded-md p-4">
                           <Label className="mb-2 block">Trending Topics:</Label>
                           <div className="flex flex-wrap gap-2">
-                            {trendingTopics.map((topic, index) => (
+                            {trendingTopics.map((topic: any, index) => (
                               <div
                                 key={index}
                                 className="flex items-center bg-secondary text-secondary-foreground px-3 py-1 rounded-full"
                               >
-                                <span>{topic}</span>
+                                <span>{topic.text}</span>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -663,7 +766,7 @@ export function ContentPlannerCampaign({
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end space-x-2">
+              {/* <CardFooter className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={resetForm}>
                   Cancel
                 </Button>
@@ -671,9 +774,9 @@ export function ContentPlannerCampaign({
                   onClick={handleSubmit}
                   className="bg-green-600 text-white hover:bg-green-700"
                 >
-                  Build Campaign Base
+                  Build Campaign Base  
                 </Button>
-              </CardFooter>
+              </CardFooter> */}
               <div className="text-center mt-2 mb-4">
                 <span className="text-xs text-gray-500">
                   Building a Base starts your plan
@@ -685,7 +788,7 @@ export function ContentPlannerCampaign({
       )}
 
       <div className="space-y-4">
-        {settings.map((campaign) => (
+        {settings?.map((campaign) => (
           <Card key={campaign.id}>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -708,8 +811,8 @@ export function ContentPlannerCampaign({
                         {campaign.type === "keyword"
                           ? "Keywords"
                           : campaign.type === "url"
-                          ? "URLs"
-                          : "Trending"}
+                            ? "URLs"
+                            : "Trending"}
                       </span>
                     </div>
                     <p className="text-gray-500 mt-1">{campaign.description}</p>
@@ -719,13 +822,14 @@ export function ContentPlannerCampaign({
                   <Link href={`/dashboard/campaigns/edit/${campaign.id}`}>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      Editvv
                     </Button>
                   </Link>
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => onDeleteCampaign(campaign.id)}
+                    // onClick={() => onDeleteCampaign(campaign.id)}
+                    onClick={() => deleteCampaign(campaign.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
@@ -738,7 +842,7 @@ export function ContentPlannerCampaign({
                   campaign.keywords.length > 0 && (
                     <div>
                       <Label className="mb-2 block">Keywords/Phrases:</Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 keywodd">
                         {campaign.keywords.map((keyword, index) => (
                           <div
                             key={index}
@@ -751,11 +855,28 @@ export function ContentPlannerCampaign({
                     </div>
                   )}
                 {campaign.type === "url" &&
+                  campaign.keywords &&
+                  campaign.keywords.length > 0 && (
+                    <div>
+                      <Label className="mb-2 block">Keyword:</Label>
+                      <div className="space-y-2 urlll">
+                        {campaign.keywords.map((keyword, index) => (
+                          <div
+                            key={index}
+                            className="bg-secondary text-secondary-foreground p-2 rounded"
+                          >
+                            {keyword}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                {campaign.type === "url" &&
                   campaign.urls &&
                   campaign.urls.length > 0 && (
                     <div>
                       <Label className="mb-2 block">URLs:</Label>
-                      <div className="space-y-2">
+                      <div className="space-y-2 urlll">
                         {campaign.urls.map((url, index) => (
                           <div
                             key={index}
@@ -791,27 +912,27 @@ export function ContentPlannerCampaign({
                       </div>
                     </div>
                   )}
-                {(campaign.topics || campaign.type === "url") &&
+                {/* {(campaign.topics || campaign.type === "url") &&
                   (campaign.topics?.length || campaign.keywords?.length) && (
                     <div>
                       <Label className="mb-2 block">Topics:</Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 zdsfsdfsdfsd">
                         {(campaign.topics?.length
                           ? campaign.topics
                           : campaign.type === "url" && campaign.keywords
-                          ? campaign.keywords
-                          : []
+                            ? campaign.keywords
+                            : []
                         ).map((topic, index) => (
                           <div
                             key={index}
-                            className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full"
+                            className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full SDdasfasfsas"
                           >
                             {topic}
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
+                  )} */}
               </div>
             </CardContent>
           </Card>

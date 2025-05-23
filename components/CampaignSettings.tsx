@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -47,6 +47,7 @@ import {
   analyzeTrends,
   AnalyzeTrendsInput,
   AnalyzeTrendsResponse,
+  getAllCampaigns,
 } from "@/components/Service";
 import { Campaign as CampaignBase } from "@/components/ContentPlannerCampaign";
 
@@ -376,8 +377,9 @@ export function CampaignSettings({
 
   const handleAddKeyword = () => {
     if (keywordInput.trim()) {
-      setKeywords([...keywords, keywordInput.trim()]);
+      setKeywords(prevState => [...prevState, keywordInput.trim()]);
       setKeywordInput("");
+      console.log("keywods", keywords);
     }
   };
 
@@ -401,7 +403,7 @@ export function CampaignSettings({
               "Grok.com is protected by Cloudflare and may not be scrapeable.",
           });
         }
-        setUrls([...urls, urlToAdd]);
+        setUrls(prevState => [...prevState, urlToAdd]);
         setUrlInput("");
       } catch (e) {
         toast({
@@ -452,15 +454,8 @@ export function CampaignSettings({
       }
 
       const query = description.trim();
-      const urlString = type === "url" ? urls.join(", ") : "";
-      const keywordArray =
-        type === "keyword"
-          ? keywords // Send array of individual keywords
-          : type === "trending"
-          ? campaign.trendingTopics || []
-          : [];
-
-      console.log("Campaign type:", type);
+      // const urlString = type === "url" ? urls.join(", ") : "";
+      const keywordArray = keywords // Send array of individual keywords
       console.log("Keywords state:", keywords);
       console.log("Trending topics:", campaign.trendingTopics);
       console.log("Keyword array:", keywordArray);
@@ -491,7 +486,7 @@ export function CampaignSettings({
       const payload: AnalyzeTrendsInput = {
         campaign_name: name.trim(),
         campaign_id: campaign.id || `campaign-${Date.now()}`,
-        urls: urlString,
+        urls: urls,
         query,
         keywords: keywordArray,
         campaign_type: type,
@@ -520,8 +515,8 @@ export function CampaignSettings({
       if (response.status === "success") {
         const campaignDescription =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].text
+            response.posts.length > 0 &&
+            response.posts[0].text
             ? response.posts[0].text
             : description.trim();
 
@@ -536,23 +531,23 @@ export function CampaignSettings({
 
         const campaignTopics =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].topics &&
-          Array.isArray(response.posts[0].topics)
+            response.posts.length > 0 &&
+            response.posts[0].topics &&
+            Array.isArray(response.posts[0].topics)
             ? normalizeTopics(response.posts[0].topics)
-                .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
-                .filter((t) => !["non", "com"].includes(t.toLowerCase()))
+              .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
+              .filter((t) => !["non", "com"].includes(t.toLowerCase()))
             : response.topics &&
               Array.isArray(response.topics) &&
               response.topics.length > 0
-            ? normalizeTopics(response.topics).map(
+              ? normalizeTopics(response.topics).map(
                 (t) => t.charAt(0).toUpperCase() + t.slice(1)
               )
-            : type === "keyword"
-            ? keywords
-            : type === "trending"
-            ? campaign.trendingTopics || []
-            : [];
+              : type === "keyword"
+                ? keywords
+                : type === "trending"
+                  ? campaign.trendingTopics || []
+                  : [];
 
         const newCampaign: Campaign = {
           id: campaign.id || `campaign-${Date.now()}`,
