@@ -1,66 +1,65 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, ArrowRight, Calendar, RefreshCw, X, Wand2, Upload } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import Image from "next/image"
-import { Instagram, Facebook, Twitter, Linkedin, Music } from "lucide-react"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  RefreshCw,
+  X,
+  Wand2,
+  Upload,
+  ChevronLeft,
+  Link,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Image from "next/image";
+import { Instagram, Facebook, Twitter, Linkedin, Music } from "lucide-react";
 
-import { generateContentAPI } from "./Service"
+import { generateContentAPI, generateImageMachineContent } from "./Service";
+import { Header } from "./Header";
 
 interface ContentCreationFlowProps {
-  selectedItems: Array<{ id: string; type: string; name: string; source: string }>
-  onClose: () => void
+  selectedItems: Array<{
+    id: string;
+    type: string;
+    name: string;
+    source: string;
+  }>;
+  onClose: () => void;
 }
 
-export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationFlowProps) {
-  const [currentStep, setCurrentStep] = useState(1)
-  // const [activeDays, setActiveDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri"])
-  // const [activePlatforms, setActivePlatforms] = useState<string[]>(["Instagram", "Facebook", "Twitter", "LinkedIn"])
-  // const [contentIdeas, setContentIdeas] = useState([
-  //   {
-  //     id: "idea-1",
-  //     title: "5 Ways to Improve Your Digital Marketing Strategy",
-  //     description:
-  //       "Explore the latest trends and techniques to enhance your digital marketing efforts and drive better results.",
-  //     keywords: ["digital marketing", "strategy", "trends"],
-  //     platforms: ["Instagram", "LinkedIn"],
-  //     image: "/placeholder.svg?height=200&width=200",
-  //   },
-  //   {
-  //     id: "idea-2",
-  //     title: "Content Marketing: Quality vs. Quantity",
-  //     description:
-  //       "Dive into the debate of quality versus quantity in content marketing and discover the right balance for your brand.",
-  //     keywords: ["content marketing", "quality", "strategy"],
-  //     platforms: ["Facebook", "Twitter"],
-  //     image: "/placeholder.svg?height=200&width=200",
-  //   },
-  //   {
-  //     id: "idea-3",
-  //     title: "Leveraging Social Media for Brand Growth",
-  //     description:
-  //       "Learn how to effectively use social media platforms to grow your brand presence and engage with your audience.",
-  //     keywords: ["social media", "brand growth", "engagement"],
-  //     platforms: ["Instagram", "Facebook", "Twitter"],
-  //     image: "/placeholder.svg?height=200&width=200",
-  //   },
-  // ])
+export function ContentCreationFlow({
+  selectedItems,
+  onClose,
+}: ContentCreationFlowProps) {
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const [contentIdeas, setContentIdeas] = useState([])
-  const [hoveredImage, setHoveredImage] = useState<string | null>(null)
-  const [regeneratingContent, setRegeneratingContent] = useState<string | null>(null)
-  const [regeneratingImage, setRegeneratingImage] = useState<string | null>(null)
+  const [contentIdeas, setContentIdeas] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
+  const [regeneratingContent, setRegeneratingContent] = useState<string | null>(
+    null
+  );
 
-  const ACTIVE_DAYS_KEY = "activeDays";
-  const ACTIVE_PLATFORMS_KEY = "activePlatforms";
+  const [regeneratingImage, setRegeneratingImage] = useState(null);
 
-
-  type Platform = 'Instagram' | 'Facebook' | 'Twitter' | 'LinkedIn' | 'TikTok';
+  type Platform = "Instagram" | "Facebook" | "Twitter" | "LinkedIn" | "TikTok";
 
   const platformIcons: Record<Platform, JSX.Element> = {
     Instagram: <Instagram className="h-5 w-5" />,
@@ -74,60 +73,74 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
     platform in platformIcons;
 
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 3))
-  }
+    setCurrentStep((prev) => Math.min(prev + 1, 3));
+  };
 
   const handlePreviousStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
-  }
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
 
   const handleRegenerateIdeas = () => {
-    // In a real implementation, this would call an API to generate new content ideas
-    console.log("Regenerating content ideas based on:", selectedItems)
-    // For demo purposes, we'll just shuffle the existing ideas
-    setContentIdeas((prev) => [...prev].reverse())
-  }
+    console.log("Regenerating content ideas based on:", selectedItems);
+    setContentIdeas((prev) => [...prev].reverse());
+  };
 
   const handleRemoveIdea = (ideaId: string) => {
-    setContentIdeas((prev) => prev.filter((idea) => idea.id !== ideaId))
-  }
+    setContentIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
+  };
 
   const handleRegenerateContent = (ideaId: string) => {
-    setRegeneratingContent(ideaId)
-    // Simulate API call
+    setRegeneratingContent(ideaId);
     setTimeout(() => {
       setContentIdeas((prev) =>
         prev.map((idea) =>
           idea.id === ideaId
             ? {
-              ...idea,
-              title: `Regenerated: ${idea.title}`,
-              description: `This content has been regenerated with AI to better match your brand voice and target audience.`,
-            }
-            : idea,
-        ),
-      )
-      setRegeneratingContent(null)
-    }, 1500)
-  }
+                ...idea,
+                title: `${idea.title}`,
+                description: `This content has been regenerated with AI to better match your brand voice and target audience.`,
+              }
+            : idea
+        )
+      );
+      setRegeneratingContent(null);
+    }, 1500);
+  };
 
-  const handleRegenerateImage = (ideaId: string) => {
-    setRegeneratingImage(ideaId)
-    // Simulate API call
-    setTimeout(() => {
-      setContentIdeas((prev) =>
-        prev.map((idea) =>
-          idea.id === ideaId
-            ? {
-              ...idea,
-              image: `/placeholder.svg?height=200&width=200&text=Regenerated`,
+  const handleRegenerateImage = async (ideaId: string, content: string) => {
+    setRegeneratingImage(ideaId);
+    try {
+      const response = await generateImageMachineContent({
+        id: ideaId,
+        query: content,
+      });
+      if (response.status === "success") {
+        setContentIdeas((prevIdeas) => {
+          const updatedIdeas = prevIdeas.map((idea) => {
+            const isMatch = idea.id === Number(ideaId);
+
+            if (isMatch) {
+              // const updated = { ...idea, image: response.message };
+              const updated = {
+                ...idea,
+                image: `${response.message}?t=${Date.now()}`,
+              };
+              return updated;
             }
-            : idea,
-        ),
-      )
-      setRegeneratingImage(null)
-    }, 1500)
-  }
+
+            return idea;
+          });
+          return updatedIdeas;
+        });
+      }
+    } catch (e) {
+      console.error("Error regenerating image:", e);
+    } finally {
+      setRegeneratingImage(null);
+    }
+  };
+
+  useEffect(() => {}, [contentIdeas]);
 
   const getContentGenPayload = (): any => {
     const data = localStorage.getItem("contentGenPayload") || "{}";
@@ -136,12 +149,29 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
 
   const [activeDays, setActiveDays] = useState<string[]>(() => {
     const payload = getContentGenPayload();
-    return payload.activeDays || ["Sunday", "Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return (
+      payload.activeDays || [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ]
+    );
   });
 
   const [activePlatforms, setActivePlatforms] = useState<string[]>(() => {
     const payload = getContentGenPayload();
-    return payload.activePlatforms || ["Instagram", "Facebook", "Twitter", "LinkedIn"];
+    return (
+      payload.activePlatforms || [
+        "Instagram",
+        "Facebook",
+        "Twitter",
+        "LinkedIn",
+      ]
+    );
   });
 
   const updateContentGenPayload = (updates: Partial<any>) => {
@@ -159,27 +189,30 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
   }, [activePlatforms]);
 
   useEffect(() => {
-    if ((currentStep === 2 || currentStep === 3) && contentIdeas.length === 0) {
+    if (currentStep === 3 && contentIdeas.length === 0) {
       const generateFinalContent = async () => {
+        setIsLoading(true);
         try {
           const response = await generateContentAPI();
-          console.log("API Response:", response);
-
-          if (response?.status === "success" && Array.isArray(response.generated_content)) {
-            const mappedIdeas = response.generated_content.map((item, index) => ({
-              id: `idea-${index + 1}`,
+          if (
+            response?.status === "success" &&
+            Array.isArray(response.message)
+          ) {
+            const mappedIdeas = response.message.map((item, index) => ({
+              id: item.id,
               title: item.title || "Untitled",
               description: item.content || "",
               keywords: [item.topic, item.day].filter(Boolean),
               platforms: item.platform ? [item.platform] : [],
-              image: "/placeholder.svg?height=200&width=200",
+              image: "",
             }));
 
-            console.log("mappedIdeas", mappedIdeas);
             setContentIdeas(mappedIdeas);
           }
         } catch (e) {
           console.log("error in generateFinalContent", e);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -187,9 +220,25 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
     }
   }, [currentStep, contentIdeas.length]);
 
-
-  console.log("const", contentIdeas);
-
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#7A99A8]">
+        <Header />
+        <main className="p-6 max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-4xl font-extrabold text-white">
+              Loading Content Creation Flow...
+            </h1>
+          </div>
+          <Card>
+            <CardContent className="p-6 flex justify-center items-center min-h-[400px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -204,34 +253,60 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">
-                {/* Step {currentStep}:{" "} */}
-                Step:{" "}
-                {currentStep === 1 ? "Plan Settings" : currentStep === 2 ? "Content Ideas" : "The Plan"}
+                Step {currentStep}:{" "}
+                {currentStep === 1
+                  ? "Plan Settings"
+                  : currentStep === 2
+                  ? "Content Ideas"
+                  : "The Plan"}
               </h2>
               <div className="flex space-x-2">
-                <span className={`w-3 h-3 rounded-full ${currentStep === 1 ? "bg-blue-600" : "bg-gray-300"}`}></span>
-                <span className={`w-3 h-3 rounded-full ${currentStep === 2 ? "bg-blue-600" : "bg-gray-300"}`}></span>
-                <span className={`w-3 h-3 rounded-full ${currentStep === 3 ? "bg-blue-600" : "bg-gray-300"}`}></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentStep === 1 ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                ></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentStep === 2 ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                ></span>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    currentStep === 3 ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                ></span>
               </div>
             </div>
 
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-[1.1rem] font-semibold mb-2">Active Days</h3>
+                  <h3 className="text-[1.1rem] font-semibold mb-2">
+                    Active Days
+                  </h3>
                   <ToggleGroup
                     type="multiple"
                     value={activeDays}
                     onValueChange={setActiveDays}
                     className="flex flex-wrap gap-2 justify-start"
                   >
-                    {["Sunday", "Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
+                    {[
+                      "Sunday",
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ].map((day) => (
                       <ToggleGroupItem
                         key={day}
                         value={day}
                         aria-label={day}
-                        className={`px-3 py-2 flex-1 justify-center day-button ${activeDays.includes(day) ? "active-day" : ""
-                          }`}
+                        className={`px-3 py-2 flex-1 justify-center day-button ${
+                          activeDays.includes(day) ? "active-day" : ""
+                        }`}
                       >
                         {day}
                       </ToggleGroupItem>
@@ -240,7 +315,9 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                 </div>
 
                 <div>
-                  <h3 className="text-[1.1rem] font-semibold mb-2">Active Platforms</h3>
+                  <h3 className="text-[1.1rem] font-semibold mb-2">
+                    Active Platforms
+                  </h3>
                   <ToggleGroup
                     type="multiple"
                     value={activePlatforms}
@@ -259,8 +336,11 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                           <ToggleGroupItem
                             value={platform}
                             aria-label={platform}
-                            className={`p-2 flex-1 justify-center platform-button ${activePlatforms.includes(platform) ? "active-platform" : ""
-                              }`}
+                            className={`p-2 flex-1 justify-center platform-button ${
+                              activePlatforms.includes(platform)
+                                ? "active-platform"
+                                : ""
+                            }`}
                           >
                             {icon}
                             <span className="ml-2">{platform}</span>
@@ -275,12 +355,15 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                  <h3 className="text-md font-medium text-blue-800 mb-2">Selected Research Items</h3>
+                  <h3 className="text-md font-medium text-blue-800 mb-2">
+                    Selected Research Items
+                  </h3>
                   <div className="max-h-40 overflow-y-auto">
                     <ul className="space-y-1">
                       {selectedItems.map((item) => (
                         <li key={item.id} className="text-sm text-blue-700">
-                          • {item.name} <span className="text-blue-500">({item.source})</span>
+                          • {item.name}{" "}
+                          <span className="text-blue-500">({item.source})</span>
                         </li>
                       ))}
                     </ul>
@@ -292,7 +375,9 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
             {currentStep === 2 && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-md font-medium">Generated Content Ideas</h3>
+                  <h3 className="text-md font-medium">
+                    Generated Content Ideas
+                  </h3>
                   <Button
                     variant="outline"
                     size="sm"
@@ -318,11 +403,18 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                             <X className="h-4 w-4" />
                           </Button>
                           <div className="flex-grow">
-                            <h4 className="font-medium text-lg mb-2">{idea.title}</h4>
-                            <p className="text-gray-600 text-sm mb-3">{idea.description}</p>
+                            <h4 className="font-medium text-lg mb-2">
+                              {idea.title}
+                            </h4>
+                            <p className="text-gray-600 text-sm mb-3">
+                              {idea.description}
+                            </p>
                             <div className="flex flex-wrap gap-2 mb-3">
                               {idea.keywords.map((keyword) => (
-                                <span key={keyword} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full">
+                                <span
+                                  key={keyword}
+                                  className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full"
+                                >
                                   {keyword}
                                 </span>
                               ))}
@@ -334,7 +426,9 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                                     key={platform}
                                     className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full inline-flex items-center"
                                   >
-                                    <span className="inline-block mr-1">{platformIcons[platform]}</span>
+                                    <span className="inline-block mr-1">
+                                      {platformIcons[platform]}
+                                    </span>
                                     {platform}
                                   </span>
                                 ) : null
@@ -351,35 +445,52 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
 
             {currentStep === 3 && (
               <div className="space-y-6">
-                {/* <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                  <h3 className="text-md font-medium text-blue-800 mb-2">Content Plan Summary</h3>
+                <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                  <h3 className="text-md font-medium text-blue-800 mb-2">
+                    Content Plan Summary
+                  </h3>
                   <div className="space-y-2">
                     <p className="text-sm text-blue-700">
-                      <span className="font-medium">Active Days:</span> {activeDays.join(", ")}
+                      <span className="font-medium">Active Days:</span>{" "}
+                      {activeDays.join(", ")}
                     </p>
                     <p className="text-sm text-blue-700">
-                      <span className="font-medium">Platforms:</span> {activePlatforms.join(", ")}
+                      <span className="font-medium">Platforms:</span>{" "}
+                      {activePlatforms.join(", ")}
                     </p>
                     <p className="text-sm text-blue-700">
-                      <span className="font-medium">Content Ideas:</span> {contentIdeas.length}
+                      <span className="font-medium">Content Ideas:</span>{" "}
+                      {contentIdeas.length}
                     </p>
                   </div>
-                </div> */}
+                </div>
 
                 <div>
-                  <h3 className="text-md font-medium mb-3">Weekly Content Calendar</h3>
+                  <h3 className="text-md font-medium mb-3">
+                    Weekly Content Calendar
+                  </h3>
                   <div className="space-y-6">
                     {contentIdeas?.map((idea) => (
-                      <div key={idea.id} className="border rounded-md p-4 space-y-4">
+                      <div
+                        key={idea.id}
+                        className="border rounded-md p-4 space-y-4"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-medium text-lg">{idea.title}</h4>
+                            <h4 className="font-medium text-lg">
+                              {idea.title}
+                            </h4>
                             <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-sm text-gray-500">Platforms:</span>
+                              <span className="text-sm text-gray-500">
+                                Platforms:
+                              </span>
 
                               {idea.platforms.map((platform) =>
                                 isValidPlatform(platform) ? (
-                                  <span key={platform} className="inline-flex items-center">
+                                  <span
+                                    key={platform}
+                                    className="inline-flex items-center"
+                                  >
                                     {platformIcons[platform]}
                                   </span>
                                 ) : null
@@ -399,7 +510,9 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <label className="text-sm font-medium">Content</label>
+                              <label className="text-sm font-medium">
+                                Content
+                              </label>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -428,12 +541,16 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                       ></path>
                                     </svg>
-                                    Regenerating...
+                                    {idea.description
+                                      ? "Regenerating..."
+                                      : "Generating..."}
                                   </span>
                                 ) : (
                                   <>
                                     <Wand2 className="w-4 h-4 mr-2" />
-                                    Regenerate
+                                    {idea.description
+                                      ? "Regenerate"
+                                      : "Generate"}
                                   </>
                                 )}
                               </Button>
@@ -444,9 +561,11 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                               onChange={(e) => {
                                 setContentIdeas((prev) =>
                                   prev.map((item) =>
-                                    item.id === idea.id ? { ...item, description: e.target.value } : item,
-                                  ),
-                                )
+                                    item.id === idea.id
+                                      ? { ...item, description: e.target.value }
+                                      : item
+                                  )
+                                );
                               }}
                               className="min-h-[100px]"
                             />
@@ -454,12 +573,18 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <label className="text-sm font-medium">Image</label>
+                              <label className="text-sm font-medium">
+                                Image
+                              </label>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleRegenerateImage(idea.id)}
-                                disabled={regeneratingImage === idea.id}
+                                onClick={() => {
+                                  handleRegenerateImage(
+                                    idea.id,
+                                    idea.description
+                                  );
+                                }}
                               >
                                 {regeneratingImage === idea.id ? (
                                   <span className="flex items-center">
@@ -483,12 +608,14 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                       ></path>
                                     </svg>
-                                    Regenerating...
+                                    {idea.image
+                                      ? "Regenerating..."
+                                      : "Generating..."}
                                   </span>
                                 ) : (
                                   <>
                                     <Wand2 className="w-4 h-4 mr-2" />
-                                    Regenerate
+                                    {idea.image ? "Regenerate" : "Generate"}
                                   </>
                                 )}
                               </Button>
@@ -500,6 +627,7 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                                 onMouseLeave={() => setHoveredImage(null)}
                               >
                                 <Image
+                                  key={idea.image}
                                   src={idea.image || "/placeholder.svg"}
                                   alt="Content image"
                                   width={200}
@@ -507,8 +635,11 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
                                   className="w-full h-full object-cover rounded-md"
                                 />
                                 <div
-                                  className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md transition-opacity duration-200 ${hoveredImage === idea.id ? "opacity-100" : "opacity-0"
-                                    }`}
+                                  className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md transition-opacity duration-200 ${
+                                    hoveredImage === idea.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  }`}
                                 >
                                   <button className="text-red-500 hover:text-red-700 transition-colors">
                                     <X size={32} />
@@ -546,7 +677,10 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
             </Button>
           )}
           {currentStep < 3 ? (
-            <Button onClick={handleNextStep} className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90">
+            <Button
+              onClick={handleNextStep}
+              className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90"
+            >
               Next
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -559,5 +693,5 @@ export function ContentCreationFlow({ selectedItems, onClose }: ContentCreationF
         </CardFooter>
       </Card>
     </TooltipProvider>
-  )
+  );
 }

@@ -318,13 +318,18 @@ export default function EditCampaignPage() {
     const fetchCampaign = async () => {
       setIsLoading(true);
       try {
-
         const editableCampaigns = await getCampaignsById(campaignId);
 
         if (editableCampaigns.status === "success") {
-          const editableCampaignsFound = editableCampaigns.message.raw_data[0]
-          localStorage.setItem("topics", JSON.stringify(editableCampaignsFound.topics))
-          localStorage.setItem("text", JSON.stringify(editableCampaignsFound.lemmatized_text))
+          const editableCampaignsFound = editableCampaigns.message.raw_data[0];
+          localStorage.setItem(
+            "topics",
+            JSON.stringify(editableCampaignsFound.topics)
+          );
+          localStorage.setItem(
+            "text",
+            JSON.stringify(editableCampaignsFound.lemmatized_text)
+          );
           setCampaign(editableCampaignsFound);
           setCampaignName(editableCampaignsFound.campaign_name);
           setCampaignDescription(editableCampaignsFound.query);
@@ -668,8 +673,6 @@ export default function EditCampaignPage() {
     );
   }
 
-
-
   return (
     <div className="min-h-screen bg-[#7A99A8]">
       <Header />
@@ -714,8 +717,8 @@ export default function EditCampaignPage() {
                 {campaign.type === "keyword"
                   ? "Keywords"
                   : campaign.type === "url"
-                    ? "URLs"
-                    : "Trending"}
+                  ? "URLs"
+                  : "Trending"}
               </span>
             </CardTitle>
           </CardHeader>
@@ -744,7 +747,7 @@ export default function EditCampaignPage() {
                     className="flex items-center"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    <span> Content Queue ssdf</span>
+                    <span> Content Queue</span>
                   </TabsTrigger>
                   <TabsTrigger value="trending" className="flex items-center">
                     <TrendingUp className="h-4 w-4 mr-2" />

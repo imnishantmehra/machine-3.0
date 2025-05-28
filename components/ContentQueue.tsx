@@ -1,45 +1,45 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Trash2, FileText } from "lucide-react"
-import { ContentCreationFlow } from "./ContentCreationFlow"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2, FileText } from "lucide-react";
+import { ContentCreationFlow } from "./ContentCreationFlow";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ContentQueueProps {
-  queueItems: Array<{ id: string; type: string; name: string; source: string }>
-  onClearQueue: () => void
+  queueItems: Array<{ id: string; type: string; name: string; source: string }>;
+  onClearQueue: () => void;
 }
 
 export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
-  const [showContentCreationFlow, setShowContentCreationFlow] = useState(false)
+  const [showContentCreationFlow, setShowContentCreationFlow] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
-    queueItems.reduce((acc, item) => ({ ...acc, [item.id]: true }), {}),
-  )
+    queueItems.reduce((acc, item) => ({ ...acc, [item.id]: true }), {})
+  );
 
   const handleConfigureContentCreation = () => {
-    const selectedItems = queueItems.filter((item) => checkedItems[item.id])
-    setShowContentCreationFlow(true)
-  }
+    const selectedItems = queueItems.filter((item) => checkedItems[item.id]);
+    setShowContentCreationFlow(true);
+  };
 
   const handleCloseContentCreationFlow = () => {
-    setShowContentCreationFlow(false)
-  }
+    setShowContentCreationFlow(false);
+  };
 
   const handleCheckChange = (id: string, checked: boolean) => {
-    setCheckedItems((prev) => ({ ...prev, [id]: checked }))
-  }
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }));
+  };
 
   const [allTopics, setAllTopics] = useState([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("topics")
+    const stored = localStorage.getItem("topics");
     if (stored) {
-      const parsed: string[] = JSON.parse(stored)
-      setAllTopics(parsed)
+      const parsed: string[] = JSON.parse(stored);
+      setAllTopics(parsed);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     const storedItems = JSON.parse(localStorage.getItem("topics") || "{}");
@@ -54,9 +54,7 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
     setCheckedItems(restoredCheckedItems);
   }, []);
 
-
   const handleCheckboxChange = (keyword: string, checked: boolean) => {
-    console.log("ASdas");
     const id = `keyword-${keyword}`;
     setCheckedItems((prev) => ({ ...prev, [id]: checked }));
 
@@ -106,18 +104,19 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
     setCheckedItems(initialCheckedItems);
   }, []);
 
-
-
   return (
     <div className="space-y-6">
       {showContentCreationFlow ? (
-        <ContentCreationFlow onClose={handleCloseContentCreationFlow} selectedItems={queueItems} />
+        <ContentCreationFlow
+          onClose={handleCloseContentCreationFlow}
+          selectedItems={queueItems}
+        />
       ) : (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center">
               <FileText className="w-5 h-5 mr-2" />
-              Content Queue sd
+              Content Queue
             </CardTitle>
             {queueItems.length > 0 && (
               <Button
@@ -186,12 +185,12 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
           </CardContent> */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Top Keywords aa</CardTitle>
+              <CardTitle className="text-base">Top Keywords</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-3">
                 {allTopics.map((keyword, index) => {
-                  const id = `keyword-${keyword}`
+                  const id = `keyword-${keyword}`;
                   return (
                     <div key={id}>
                       <div className="flex justify-between items-center">
@@ -199,14 +198,16 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
                           <Checkbox
                             id={id}
                             checked={!!checkedItems[id]}
-                            onCheckedChange={(checked) => handleCheckboxChange(keyword, !!checked)}
+                            onCheckedChange={(checked) =>
+                              handleCheckboxChange(keyword, !!checked)
+                            }
                             className="mr-2"
                           />
                           <label htmlFor={id}>{keyword}</label>
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
               <div className="flex justify-end mt-4">
@@ -222,5 +223,5 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -545,19 +545,27 @@ export const getAllCampaigns = async () => {
   try {
     const endpoint = "campaigns";
 
-    const response = await Service(endpoint, "GET", undefined, undefined, false);
+    const response = await Service(
+      endpoint,
+      "GET",
+      undefined,
+      undefined,
+      false
+    );
 
     if (response?.status === "success") {
       return {
         status: "success",
-        message: response
+        message: response,
       };
     } else {
       console.error("Analyze failed:", response?.message || response?.error);
       return {
         status: "error",
         message:
-          response?.message || response?.error || "campaigns couldn't be fetched",
+          response?.message ||
+          response?.error ||
+          "campaigns couldn't be fetched",
       };
     }
   } catch (error) {
@@ -574,21 +582,32 @@ export const getAllCampaigns = async () => {
 
 export const getCampaignsById = async (campaign_id: string) => {
   try {
-    const endpoint = `campaigns/${campaign_id}/raw_data`
+    const endpoint = `campaigns/${campaign_id}/raw_data`;
 
-    const response = await Service(endpoint, "GET", undefined, undefined, false);
+    const response = await Service(
+      endpoint,
+      "GET",
+      undefined,
+      undefined,
+      false
+    );
 
     if (response?.status === "success") {
       return {
         status: "success",
-        message: response
+        message: response,
       };
     } else {
-      console.error("Failed to get campaigns for edit:", response?.message || response?.error);
+      console.error(
+        "Failed to get campaigns for edit:",
+        response?.message || response?.error
+      );
       return {
         status: "error",
         message:
-          response?.message || response?.error || "Failed to get campaigns for edit.",
+          response?.message ||
+          response?.error ||
+          "Failed to get campaigns for edit.",
       };
     }
   } catch (error) {
@@ -596,26 +615,33 @@ export const getCampaignsById = async (campaign_id: string) => {
     return {
       status: "error",
       message:
-        error instanceof Error
-          ? error.message
-          : "Unexpected error occurred.",
+        error instanceof Error ? error.message : "Unexpected error occurred.",
     };
   }
 };
 
 export const deleteCampaignsById = async (campaign_id: string) => {
   try {
-    const endpoint = `campaigns/${campaign_id}`
+    const endpoint = `campaigns/${campaign_id}`;
 
-    const response = await Service(endpoint, "DELETE", undefined, undefined, false);
+    const response = await Service(
+      endpoint,
+      "DELETE",
+      undefined,
+      undefined,
+      false
+    );
 
     if (response?.status === "success") {
       return {
         status: "success",
-        message: "Deleted Successfully"
+        message: "Deleted Successfully",
       };
     } else {
-      console.error("Error in deleting campaign:", response?.message || response?.error);
+      console.error(
+        "Error in deleting campaign:",
+        response?.message || response?.error
+      );
       return {
         status: "error",
         message:
@@ -634,15 +660,10 @@ export const deleteCampaignsById = async (campaign_id: string) => {
   }
 };
 
-
 export const getTrendingContent = async (payload: TrendingContentPayload) => {
   try {
-    const {
-      trendingKeyword,
-      campaign_id,
-      campaign_name,
-      description,
-    } = payload;
+    const { trendingKeyword, campaign_id, campaign_name, description } =
+      payload;
 
     const queryParams = new URLSearchParams({
       query: trendingKeyword,
@@ -653,7 +674,13 @@ export const getTrendingContent = async (payload: TrendingContentPayload) => {
 
     const endpoint = `search?${queryParams}`;
 
-    const response = await Service(endpoint, "GET", undefined, undefined, false);
+    const response = await Service(
+      endpoint,
+      "GET",
+      undefined,
+      undefined,
+      false
+    );
 
     if (response?.status === "success") {
       return {
@@ -665,7 +692,9 @@ export const getTrendingContent = async (payload: TrendingContentPayload) => {
       return {
         status: "error",
         message:
-          response?.message || response?.error || "Failed to get trending topics.",
+          response?.message ||
+          response?.error ||
+          "Failed to get trending topics.",
       };
     }
   } catch (error) {
@@ -679,7 +708,6 @@ export const getTrendingContent = async (payload: TrendingContentPayload) => {
     };
   }
 };
-
 
 export const generateContent = async ({
   campaign_name,
@@ -704,7 +732,6 @@ export const generateContent = async ({
   iterations = 25,
   pass_threshold = 0.7,
 }: AnalyzeTrendsInput): Promise<AnalyzeTrendsResponse> => {
-
   try {
     const endpoint = "analyze";
 
@@ -732,7 +759,6 @@ export const generateContent = async ({
       pass_threshold,
     };
 
-    console.log("API Payload:", JSON.stringify(payload, null, 2));
     const response = await Service(endpoint, "POST", payload, undefined, false);
 
     if (response?.status === "success") {
@@ -765,7 +791,6 @@ export const generateContent = async ({
   }
 };
 
-
 export const generateContentAPI = async () => {
   try {
     const endpoint = "generate_content";
@@ -780,52 +805,54 @@ export const generateContentAPI = async () => {
       parsedPayload = JSON.parse(payloadData);
     }
 
-    console.log("parsedPayload", parsedPayload);
-
-    // Construct the URLSearchParams (application/x-www-form-urlencoded format)
     const formParams = new URLSearchParams();
 
-    // Add topics: if keywords exist in localStorage, join them as comma-separated
-    formParams.append("topics", parsedPayload.keywords ? parsedPayload.keywords.join(",") : "AI, 2025");
+    formParams.append(
+      "topics",
+      parsedPayload.keywords ? parsedPayload.keywords.join(",") : "AI, 2025"
+    );
 
-    // Add text: default to the sample text from localStorage if available
-    formParams.append("text", payloadTextData || "usme alag alag component the  isme alag hai");
+    formParams.append(
+      "text",
+      payloadTextData || "usme alag alag component the  isme alag hai"
+    );
 
-    // Add platforms: Join platforms array if available, else default to "Facebook"
-    if (Array.isArray(parsedPayload.activePlatforms) && parsedPayload.activePlatforms.length > 0) {
+    if (
+      Array.isArray(parsedPayload.activePlatforms) &&
+      parsedPayload.activePlatforms.length > 0
+    ) {
       formParams.append("platforms", parsedPayload.activePlatforms.join(","));
     } else {
-      formParams.append("platforms", "Facebook");  // Default value
+      formParams.append("platforms", "Facebook");
     }
-
-    // Add days: Join days array if available, else default to "Monday"
-    if (Array.isArray(parsedPayload.activeDays) && parsedPayload.activeDays.length > 0) {
+    if (
+      Array.isArray(parsedPayload.activeDays) &&
+      parsedPayload.activeDays.length > 0
+    ) {
       formParams.append("days", parsedPayload.activeDays.join(","));
     } else {
-      formParams.append("days", "Monday");  // Default value
+      formParams.append("days", "Monday");
     }
 
-    // Add author: If available in localStorage, use it, otherwise default to empty
     formParams.append("author", parsedPayload.author || "");
 
-    // Add sample_text: If available in localStorage, use it, otherwise default to payloadTextData
-    formParams.append("sample_text", payloadTextData || "usme alag alag component the  isme alag hai");
-
-    console.log("FormData Payload:", formParams.toString());
-
-    // Send request using URLSearchParams (application/x-www-form-urlencoded)
-    const response = await Service(endpoint, "POST", formParams, undefined, true);
+    formParams.append(
+      "sample_text",
+      payloadTextData || "usme alag alag component the  isme alag hai"
+    );
+    const response = await Service(
+      endpoint,
+      "POST",
+      formParams,
+      undefined,
+      true
+    );
     console.log("response", response);
 
     if (response?.status === "success") {
       return {
         status: "success",
-        task: response.task,
-        campaign_name: response.campaign_name,
-        campaign_id: response.campaign_id,
-        keywords: response.keywords || parsedPayload.keywords,
-        posts: response.generated_content,
-        topics: response.topics,
+        message: response.generated_content,
       };
     } else {
       console.error("Analyze failed:", response?.message || response?.error);
@@ -847,3 +874,53 @@ export const generateContentAPI = async () => {
   }
 };
 
+export const generateImageMachineContent = async (payload: {
+  id: string;
+  query: string;
+}) => {
+  try {
+    const { id, query } = payload;
+
+    const queryParams = new URLSearchParams({
+      id,
+      query,
+    }).toString();
+
+    const endpoint = `generate_image_machine_content?${queryParams}`;
+
+    const response = await Service(
+      endpoint,
+      "POST",
+      undefined,
+      {
+        accept: "application/json",
+      },
+      false
+    );
+    if (response?.status === "success") {
+      return {
+        status: "success",
+        message: response.image_url,
+      };
+    } else {
+      console.error(
+        "Image generation failed:",
+        response?.message || response?.error
+      );
+      return {
+        status: "error",
+        message:
+          response?.message || response?.error || "Failed to generate image.",
+      };
+    }
+  } catch (error) {
+    console.error("Error during image generation:", error);
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unexpected error occurred during image generation.",
+    };
+  }
+};

@@ -28,7 +28,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteCampaignsById, getAllCampaigns, getTrendingContent } from "./Service";
+import {
+  deleteCampaignsById,
+  getAllCampaigns,
+  getTrendingContent,
+} from "./Service";
 import { toast } from "sonner";
 
 export interface Campaign {
@@ -104,7 +108,6 @@ export function ContentPlannerCampaign({
   });
   const [isSettingsMode, setIsSettingsMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  console.log("settings", settings);
   const [extractionSettings, setExtractionSettings] = useState({
     webScrapingDepth: 2,
     includeImages: true,
@@ -205,7 +208,7 @@ export function ContentPlannerCampaign({
           urlToAdd = "https://" + urlToAdd;
         }
         new URL(urlToAdd);
-        setUrls(prevState => [...prevState, urlToAdd]);
+        setUrls((prevState) => [...prevState, urlToAdd]);
         setUrlInput("");
       } catch (e) {
         setError({
@@ -395,14 +398,16 @@ export function ContentPlannerCampaign({
   //call the API to get all the campaigns at once.
   useEffect(() => {
     const getAllCampaign = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
         const response = await getAllCampaigns();
         if (response.status === "success") {
-          console.log("object", response.message);
           setSettings(response.message.campaigns);
         } else {
-          console.error("API Error Details:", JSON.stringify(response, null, 2));
+          console.error(
+            "API Error Details:",
+            JSON.stringify(response, null, 2)
+          );
           throw new Error(response.message || "Failed to analyze trends");
         }
       } catch (error) {
@@ -416,12 +421,11 @@ export function ContentPlannerCampaign({
         //       : "An unexpected error occurred.",
         // });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
     getAllCampaign();
-  }, [])
-
+  }, []);
 
   const deleteCampaign = async (id: string) => {
     setIsLoading(true);
@@ -431,8 +435,8 @@ export function ContentPlannerCampaign({
 
       if (response.status === "success") {
         // ✅ Remove the deleted campaign from state
-        setSettings(prevCampaigns =>
-          prevCampaigns.filter(campaign => campaign.id !== id)
+        setSettings((prevCampaigns) =>
+          prevCampaigns.filter((campaign) => campaign.id !== id)
         );
       } else {
         setError({
@@ -486,8 +490,6 @@ export function ContentPlannerCampaign({
       </div>
     );
   }
-
-  console.log("trendingTopics", trendingTopics);
 
   return (
     <div className="space-y-6">
@@ -546,7 +548,7 @@ export function ContentPlannerCampaign({
                 extractionSettings: extractionSettings,
                 preprocessingSettings: preprocessingSettings,
                 entitySettings: entitySettings,
-                modelingSettings: modelingSettings
+                modelingSettings: modelingSettings,
               }}
               onSave={(updatedCampaign) => {
                 if (editingId) {
@@ -811,8 +813,8 @@ export function ContentPlannerCampaign({
                         {campaign.type === "keyword"
                           ? "Keywords"
                           : campaign.type === "url"
-                            ? "URLs"
-                            : "Trending"}
+                          ? "URLs"
+                          : "Trending"}
                       </span>
                     </div>
                     <p className="text-gray-500 mt-1">{campaign.description}</p>

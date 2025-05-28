@@ -1,40 +1,43 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 // Add the InfoIcon import
-import { Database, Code, Network, Brain, InfoIcon } from "lucide-react"
-import type { Campaign } from "./ContentPlannerCampaign"
-import { ParameterInfoModal } from "./ParameterInfoModal"
+import { Database, Code, Network, Brain, InfoIcon } from "lucide-react";
+import type { Campaign } from "./ContentPlannerCampaign";
+import { ParameterInfoModal } from "./ParameterInfoModal";
 
 interface CampaignAdvancedSettingsProps {
-  campaign: Campaign
-  onSave: (updatedSettings: Partial<Campaign>) => void
+  campaign: Campaign;
+  onSave: (updatedSettings: Partial<Campaign>) => void;
 }
 
-export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedSettingsProps) {
+export function CampaignAdvancedSettings({
+  campaign,
+  onSave,
+}: CampaignAdvancedSettingsProps) {
   // Initialize state with campaign settings or defaults
   const [extractionSettings, setExtractionSettings] = useState({
     webScrapingDepth: campaign.extractionSettings?.webScrapingDepth || 2,
     includeImages: campaign.extractionSettings?.includeImages || true,
     includeLinks: campaign.extractionSettings?.includeLinks || true,
-    maxPages: campaign.extractionSettings?.maxPages || 100,
+    maxPages: campaign.extractionSettings?.maxPages || 10,
     batchSize: campaign.extractionSettings?.batchSize || 10,
-  })
+  });
 
   const [preprocessingSettings, setPreprocessingSettings] = useState({
     removeStopwords: campaign.preprocessingSettings?.removeStopwords || true,
     stemming: campaign.preprocessingSettings?.stemming || true,
     lemmatization: campaign.preprocessingSettings?.lemmatization || true,
     caseSensitive: campaign.preprocessingSettings?.caseSensitive || false,
-  })
+  });
 
   const [entitySettings, setEntitySettings] = useState({
     extractPersons: campaign.entitySettings?.extractPersons || true,
@@ -42,28 +45,28 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
     extractLocations: campaign.entitySettings?.extractLocations || true,
     extractDates: campaign.entitySettings?.extractDates || true,
     confidenceThreshold: campaign.entitySettings?.confidenceThreshold || 0.7,
-  })
+  });
 
   // Update the algorithm state initialization to include the new options
   const [modelingSettings, setModelingSettings] = useState({
     algorithm: campaign.modelingSettings?.algorithm || "lda",
     numTopics: campaign.modelingSettings?.numTopics || 5,
-    iterations: campaign.modelingSettings?.iterations || 100,
+    iterations: campaign.modelingSettings?.iterations || 10,
     passThreshold: campaign.modelingSettings?.passThreshold || 0.5,
-  })
+  });
 
-  const [activeTab, setActiveTab] = useState("extraction")
+  const [activeTab, setActiveTab] = useState("extraction");
 
   // Add the info modal state after the other state declarations
   const [infoModal, setInfoModal] = useState<{
-    isOpen: boolean
-    title: string
-    description: React.ReactNode
+    isOpen: boolean;
+    title: string;
+    description: React.ReactNode;
   }>({
     isOpen: false,
     title: "",
     description: "",
-  })
+  });
 
   // Add the openInfoModal and closeInfoModal functions
   const openInfoModal = (title: string, description: React.ReactNode) => {
@@ -71,15 +74,15 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
       isOpen: true,
       title,
       description,
-    })
-  }
+    });
+  };
 
   const closeInfoModal = () => {
     setInfoModal({
       ...infoModal,
       isOpen: false,
-    })
-  }
+    });
+  };
 
   // Add the parameter descriptions object
   const parameterDescriptions = {
@@ -88,12 +91,15 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
       <div className="space-y-2">
         <div>How many pages total should we scrape?</div>
         <div>
-          <strong>Low (50):</strong> Good for quick tests (like sampling a blog).
+          <strong>Low (50):</strong> Good for quick tests (like sampling a
+          blog).
         </div>
         <div>
           <strong>High (1000+):</strong> Full site crawl (might take hours).
         </div>
-        <div className="text-sm text-gray-600 mt-2">Example: Set to 100 to avoid overwhelming small websites.</div>
+        <div className="text-sm text-gray-600 mt-2">
+          Example: Set to 100 to avoid overwhelming small websites.
+        </div>
       </div>
     ),
     webScrapingDepth: (
@@ -103,7 +109,8 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
           <strong>1:</strong> Only the homepage (great for news sites).
         </div>
         <div>
-          <strong>3:</strong> Homepage → Category → Product → Reviews (common for e-commerce).
+          <strong>3:</strong> Homepage → Category → Product → Reviews (common
+          for e-commerce).
         </div>
       </div>
     ),
@@ -117,7 +124,8 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
           <strong>100:</strong> Fast but risky (might get blocked).
         </div>
         <div className="text-sm text-gray-600 mt-2">
-          Like checkout lanes – more lanes speed things up but annoy the store manager.
+          Like checkout lanes – more lanes speed things up but annoy the store
+          manager.
         </div>
       </div>
     ),
@@ -136,7 +144,8 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
       <div className="space-y-2">
         <div>Should hyperlinks be preserved in the extracted content?</div>
         <div>
-          <strong>ON:</strong> Maintains link structure for relationship analysis.
+          <strong>ON:</strong> Maintains link structure for relationship
+          analysis.
         </div>
         <div>
           <strong>OFF:</strong> Strips links for cleaner text analysis.
@@ -148,10 +157,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
     removeStopwords: (
       <div className="space-y-2">
         <div>
-          <strong>ON:</strong> Filters out 'the', 'and', 'is' (focuses on meaty words).
+          <strong>ON:</strong> Filters out 'the', 'and', 'is' (focuses on meaty
+          words).
         </div>
         <div>
-          <strong>OFF:</strong> Keeps all words (better for phrases like 'to be or not to be').
+          <strong>OFF:</strong> Keeps all words (better for phrases like 'to be
+          or not to be').
         </div>
       </div>
     ),
@@ -163,7 +174,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
     ),
     lemmatization: (
       <div className="space-y-2">
-        <div>Uses dictionaries to find base forms – 'better' → 'good', 'mice' → 'mouse'.</div>
+        <div>
+          Uses dictionaries to find base forms – 'better' → 'good', 'mice' →
+          'mouse'.
+        </div>
         <div>Slower but more accurate.</div>
       </div>
     ),
@@ -181,32 +195,46 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
     // Entity Extraction
     extractPersons: (
       <div className="space-y-2">
-        <div>Finds names like 'Alice' or 'Dr. Smith' (may miss nicknames like 'Big Al').</div>
+        <div>
+          Finds names like 'Alice' or 'Dr. Smith' (may miss nicknames like 'Big
+          Al').
+        </div>
       </div>
     ),
     extractLocations: (
       <div className="space-y-2">
-        <div>Detects cities ('Paris'), countries ('Canada'), but not informal addresses ('my backyard').</div>
+        <div>
+          Detects cities ('Paris'), countries ('Canada'), but not informal
+          addresses ('my backyard').
+        </div>
       </div>
     ),
     extractOrganizations: (
       <div className="space-y-2">
-        <div>Tags companies ('Google') and institutions ('UN') – might confuse abbreviations ('NASA' vs 'nasa').</div>
+        <div>
+          Tags companies ('Google') and institutions ('UN') – might confuse
+          abbreviations ('NASA' vs 'nasa').
+        </div>
       </div>
     ),
     extractDates: (
       <div className="space-y-2">
-        <div>Catches 'March 2025' or 'next Tuesday' but not relative times ('a few days ago').</div>
+        <div>
+          Catches 'March 2025' or 'next Tuesday' but not relative times ('a few
+          days ago').
+        </div>
       </div>
     ),
     confidenceThreshold: (
       <div className="space-y-2">
         <div>How sure should the model be?</div>
         <div>
-          <strong>Low (0.5):</strong> Tags more guesses ('Jordan' = person or country?).
+          <strong>Low (0.5):</strong> Tags more guesses ('Jordan' = person or
+          country?).
         </div>
         <div>
-          <strong>High (0.9):</strong> Only crystal-clear matches (misses tricky cases).
+          <strong>High (0.9):</strong> Only crystal-clear matches (misses tricky
+          cases).
         </div>
       </div>
     ),
@@ -215,16 +243,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
     algorithm: (
       <div className="space-y-4">
         <div>
-          <strong>LDA:</strong> Classic method (like sorting docs into folders). Needs 10-20 topics.
+          <strong>LDA:</strong> Classic method (like sorting docs into folders).
+          Needs 10-20 topics.
         </div>
         <div>
-          <strong>NMF:</strong> Lightweight for small datasets (avoids gibberish topics).
+          <strong>NMF:</strong> Lightweight for small datasets (avoids gibberish
+          topics).
         </div>
         <div>
-          <strong>BERTopic:</strong> Uses AI (groups by meaning, not just words). Great for long texts.
+          <strong>BERTopic:</strong> Uses AI (groups by meaning, not just
+          words). Great for long texts.
         </div>
         <div>
-          <strong>LSA:</strong> Old-school (fast but vague). Use for quick drafts.
+          <strong>LSA:</strong> Old-school (fast but vague). Use for quick
+          drafts.
         </div>
       </div>
     ),
@@ -235,7 +267,8 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
           <strong>5:</strong> Broad categories (e.g., 'Sports', 'Tech').
         </div>
         <div>
-          <strong>20:</strong> Niche subtopics (e.g., 'Vintage Baseball Cards', 'AI Ethics').
+          <strong>20:</strong> Niche subtopics (e.g., 'Vintage Baseball Cards',
+          'AI Ethics').
         </div>
       </div>
     ),
@@ -257,11 +290,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
           <strong>0.1:</strong> Allows fuzzy themes ('misc tech stuff').
         </div>
         <div>
-          <strong>0.7:</strong> Only distinct topics ('Python vs Java tutorials').
+          <strong>0.7:</strong> Only distinct topics ('Python vs Java
+          tutorials').
         </div>
       </div>
     ),
-  }
+  };
 
   const handleSaveSettings = () => {
     onSave({
@@ -269,8 +303,8 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
       preprocessingSettings,
       entitySettings,
       modelingSettings,
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -307,13 +341,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Web Scraping Depth", parameterDescriptions.webScrapingDepth)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Web Scraping Depth",
+                            parameterDescriptions.webScrapingDepth
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{extractionSettings.webScrapingDepth}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {extractionSettings.webScrapingDepth}
+                    </span>
                   </div>
                   <Slider
                     id="web-scraping-depth"
@@ -322,11 +363,15 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     step={1}
                     value={[extractionSettings.webScrapingDepth]}
                     onValueChange={(value) =>
-                      setExtractionSettings({ ...extractionSettings, webScrapingDepth: value[0] })
+                      setExtractionSettings({
+                        ...extractionSettings,
+                        webScrapingDepth: value[0],
+                      })
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Controls how many levels deep the scraper will follow links from the starting URL.
+                    Controls how many levels deep the scraper will follow links
+                    from the starting URL.
                   </p>
                 </div>
 
@@ -339,13 +384,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Maximum Pages", parameterDescriptions.maxPages)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Maximum Pages",
+                            parameterDescriptions.maxPages
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{extractionSettings.maxPages}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {extractionSettings.maxPages}
+                    </span>
                   </div>
                   <Slider
                     id="max-pages"
@@ -353,9 +405,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={500}
                     step={10}
                     value={[extractionSettings.maxPages]}
-                    onValueChange={(value) => setExtractionSettings({ ...extractionSettings, maxPages: value[0] })}
+                    onValueChange={(value) =>
+                      setExtractionSettings({
+                        ...extractionSettings,
+                        maxPages: value[0],
+                      })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Maximum number of pages to scrape in total.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Maximum number of pages to scrape in total.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -367,13 +426,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Batch Size", parameterDescriptions.batchSize)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Batch Size",
+                            parameterDescriptions.batchSize
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{extractionSettings.batchSize}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {extractionSettings.batchSize}
+                    </span>
                   </div>
                   <Slider
                     id="batch-size"
@@ -381,9 +447,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={50}
                     step={5}
                     value={[extractionSettings.batchSize]}
-                    onValueChange={(value) => setExtractionSettings({ ...extractionSettings, batchSize: value[0] })}
+                    onValueChange={(value) =>
+                      setExtractionSettings({
+                        ...extractionSettings,
+                        batchSize: value[0],
+                      })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Number of pages to process in parallel.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Number of pages to process in parallel.
+                  </p>
                 </div>
 
                 {/* Update the Include Images label with info icon */}
@@ -394,7 +467,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Include Images", parameterDescriptions.includeImages)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Include Images",
+                          parameterDescriptions.includeImages
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -404,7 +482,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="include-images"
                     checked={extractionSettings.includeImages}
                     onCheckedChange={(checked) =>
-                      setExtractionSettings({ ...extractionSettings, includeImages: checked })
+                      setExtractionSettings({
+                        ...extractionSettings,
+                        includeImages: checked,
+                      })
                     }
                   />
                 </div>
@@ -417,7 +498,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Include Links", parameterDescriptions.includeLinks)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Include Links",
+                          parameterDescriptions.includeLinks
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -427,7 +513,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="include-links"
                     checked={extractionSettings.includeLinks}
                     onCheckedChange={(checked) =>
-                      setExtractionSettings({ ...extractionSettings, includeLinks: checked })
+                      setExtractionSettings({
+                        ...extractionSettings,
+                        includeLinks: checked,
+                      })
                     }
                   />
                 </div>
@@ -448,7 +537,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Remove Stopwords", parameterDescriptions.removeStopwords)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Remove Stopwords",
+                          parameterDescriptions.removeStopwords
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -458,12 +552,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="remove-stopwords"
                     checked={preprocessingSettings.removeStopwords}
                     onCheckedChange={(checked) =>
-                      setPreprocessingSettings({ ...preprocessingSettings, removeStopwords: checked })
+                      setPreprocessingSettings({
+                        ...preprocessingSettings,
+                        removeStopwords: checked,
+                      })
                     }
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Remove common words that don't add meaning (e.g., "the", "and", "is").
+                  Remove common words that don't add meaning (e.g., "the",
+                  "and", "is").
                 </p>
 
                 {/* Update the Stemming label with info icon */}
@@ -474,7 +572,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Stemming", parameterDescriptions.stemming)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Stemming",
+                          parameterDescriptions.stemming
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -484,7 +587,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="stemming"
                     checked={preprocessingSettings.stemming}
                     onCheckedChange={(checked) =>
-                      setPreprocessingSettings({ ...preprocessingSettings, stemming: checked })
+                      setPreprocessingSettings({
+                        ...preprocessingSettings,
+                        stemming: checked,
+                      })
                     }
                   />
                 </div>
@@ -500,7 +606,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Lemmatization", parameterDescriptions.lemmatization)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Lemmatization",
+                          parameterDescriptions.lemmatization
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -510,12 +621,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="lemmatization"
                     checked={preprocessingSettings.lemmatization}
                     onCheckedChange={(checked) =>
-                      setPreprocessingSettings({ ...preprocessingSettings, lemmatization: checked })
+                      setPreprocessingSettings({
+                        ...preprocessingSettings,
+                        lemmatization: checked,
+                      })
                     }
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Convert words to their dictionary form (e.g., "better" → "good").
+                  Convert words to their dictionary form (e.g., "better" →
+                  "good").
                 </p>
 
                 {/* Update the Case Sensitive label with info icon */}
@@ -526,7 +641,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Case Sensitive", parameterDescriptions.caseSensitive)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Case Sensitive",
+                          parameterDescriptions.caseSensitive
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -536,11 +656,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="case-sensitive"
                     checked={preprocessingSettings.caseSensitive}
                     onCheckedChange={(checked) =>
-                      setPreprocessingSettings({ ...preprocessingSettings, caseSensitive: checked })
+                      setPreprocessingSettings({
+                        ...preprocessingSettings,
+                        caseSensitive: checked,
+                      })
                     }
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Treat uppercase and lowercase words as different.</p>
+                <p className="text-xs text-muted-foreground">
+                  Treat uppercase and lowercase words as different.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -558,7 +683,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Extract Persons", parameterDescriptions.extractPersons)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Extract Persons",
+                          parameterDescriptions.extractPersons
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -567,7 +697,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                   <Switch
                     id="extract-persons"
                     checked={entitySettings.extractPersons}
-                    onCheckedChange={(checked) => setEntitySettings({ ...entitySettings, extractPersons: checked })}
+                    onCheckedChange={(checked) =>
+                      setEntitySettings({
+                        ...entitySettings,
+                        extractPersons: checked,
+                      })
+                    }
                   />
                 </div>
 
@@ -579,7 +714,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Extract Organizations", parameterDescriptions.extractOrganizations)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Extract Organizations",
+                          parameterDescriptions.extractOrganizations
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -589,7 +729,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     id="extract-organizations"
                     checked={entitySettings.extractOrganizations}
                     onCheckedChange={(checked) =>
-                      setEntitySettings({ ...entitySettings, extractOrganizations: checked })
+                      setEntitySettings({
+                        ...entitySettings,
+                        extractOrganizations: checked,
+                      })
                     }
                   />
                 </div>
@@ -602,7 +745,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Extract Locations", parameterDescriptions.extractLocations)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Extract Locations",
+                          parameterDescriptions.extractLocations
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -611,7 +759,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                   <Switch
                     id="extract-locations"
                     checked={entitySettings.extractLocations}
-                    onCheckedChange={(checked) => setEntitySettings({ ...entitySettings, extractLocations: checked })}
+                    onCheckedChange={(checked) =>
+                      setEntitySettings({
+                        ...entitySettings,
+                        extractLocations: checked,
+                      })
+                    }
                   />
                 </div>
 
@@ -623,7 +776,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Extract Dates", parameterDescriptions.extractDates)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Extract Dates",
+                          parameterDescriptions.extractDates
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -632,7 +790,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                   <Switch
                     id="extract-dates"
                     checked={entitySettings.extractDates}
-                    onCheckedChange={(checked) => setEntitySettings({ ...entitySettings, extractDates: checked })}
+                    onCheckedChange={(checked) =>
+                      setEntitySettings({
+                        ...entitySettings,
+                        extractDates: checked,
+                      })
+                    }
                   />
                 </div>
 
@@ -645,7 +808,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Confidence Threshold", parameterDescriptions.confidenceThreshold)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Confidence Threshold",
+                            parameterDescriptions.confidenceThreshold
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
@@ -661,10 +829,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={1.0}
                     step={0.1}
                     value={[entitySettings.confidenceThreshold]}
-                    onValueChange={(value) => setEntitySettings({ ...entitySettings, confidenceThreshold: value[0] })}
+                    onValueChange={(value) =>
+                      setEntitySettings({
+                        ...entitySettings,
+                        confidenceThreshold: value[0],
+                      })
+                    }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Minimum confidence score required to include an entity (0.1-1.0).
+                    Minimum confidence score required to include an entity
+                    (0.1-1.0).
                   </p>
                 </div>
               </div>
@@ -685,7 +859,12 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     </Label>
                     <button
                       type="button"
-                      onClick={() => openInfoModal("Algorithm", parameterDescriptions.algorithm)}
+                      onClick={() =>
+                        openInfoModal(
+                          "Algorithm",
+                          parameterDescriptions.algorithm
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -694,35 +873,72 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                     <Button
                       type="button"
-                      variant={modelingSettings.algorithm === "lda" ? "default" : "outline"}
-                      onClick={() => setModelingSettings({ ...modelingSettings, algorithm: "lda" })}
+                      variant={
+                        modelingSettings.algorithm === "lda"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        setModelingSettings({
+                          ...modelingSettings,
+                          algorithm: "lda",
+                        })
+                      }
                     >
                       LDA
                     </Button>
                     <Button
                       type="button"
-                      variant={modelingSettings.algorithm === "nmf" ? "default" : "outline"}
-                      onClick={() => setModelingSettings({ ...modelingSettings, algorithm: "nmf" })}
+                      variant={
+                        modelingSettings.algorithm === "nmf"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        setModelingSettings({
+                          ...modelingSettings,
+                          algorithm: "nmf",
+                        })
+                      }
                     >
                       NMF
                     </Button>
                     <Button
                       type="button"
-                      variant={modelingSettings.algorithm === "bertopic" ? "default" : "outline"}
-                      onClick={() => setModelingSettings({ ...modelingSettings, algorithm: "bertopic" })}
+                      variant={
+                        modelingSettings.algorithm === "bertopic"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        setModelingSettings({
+                          ...modelingSettings,
+                          algorithm: "bertopic",
+                        })
+                      }
                     >
                       BERTopic
                     </Button>
                     <Button
                       type="button"
-                      variant={modelingSettings.algorithm === "lsa" ? "default" : "outline"}
-                      onClick={() => setModelingSettings({ ...modelingSettings, algorithm: "lsa" })}
+                      variant={
+                        modelingSettings.algorithm === "lsa"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        setModelingSettings({
+                          ...modelingSettings,
+                          algorithm: "lsa",
+                        })
+                      }
                     >
                       LSA
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Choose between LDA, NMF, BERTopic, or LSA algorithms for topic modeling.
+                    Choose between LDA, NMF, BERTopic, or LSA algorithms for
+                    topic modeling.
                   </p>
                 </div>
 
@@ -735,13 +951,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Number of Topics", parameterDescriptions.numTopics)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Number of Topics",
+                            parameterDescriptions.numTopics
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{modelingSettings.numTopics}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {modelingSettings.numTopics}
+                    </span>
                   </div>
                   <Slider
                     id="num-topics"
@@ -749,9 +972,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={20}
                     step={1}
                     value={[modelingSettings.numTopics]}
-                    onValueChange={(value) => setModelingSettings({ ...modelingSettings, numTopics: value[0] })}
+                    onValueChange={(value) =>
+                      setModelingSettings({
+                        ...modelingSettings,
+                        numTopics: value[0],
+                      })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Number of topics to extract from the content.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Number of topics to extract from the content.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -763,13 +993,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Iterations", parameterDescriptions.iterations)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Iterations",
+                            parameterDescriptions.iterations
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{modelingSettings.iterations}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {modelingSettings.iterations}
+                    </span>
                   </div>
                   <Slider
                     id="iterations"
@@ -777,9 +1014,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={500}
                     step={50}
                     value={[modelingSettings.iterations]}
-                    onValueChange={(value) => setModelingSettings({ ...modelingSettings, iterations: value[0] })}
+                    onValueChange={(value) =>
+                      setModelingSettings({
+                        ...modelingSettings,
+                        iterations: value[0],
+                      })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Number of training iterations for the model.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Number of training iterations for the model.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -791,13 +1035,20 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                       </Label>
                       <button
                         type="button"
-                        onClick={() => openInfoModal("Pass Threshold", parameterDescriptions.passThreshold)}
+                        onClick={() =>
+                          openInfoModal(
+                            "Pass Threshold",
+                            parameterDescriptions.passThreshold
+                          )
+                        }
                         className="text-gray-500 hover:text-gray-700 focus:outline-none"
                       >
                         <InfoIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-muted-foreground">{modelingSettings.passThreshold.toFixed(1)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {modelingSettings.passThreshold.toFixed(1)}
+                    </span>
                   </div>
                   <Slider
                     id="pass-threshold"
@@ -805,9 +1056,16 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
                     max={1.0}
                     step={0.1}
                     value={[modelingSettings.passThreshold]}
-                    onValueChange={(value) => setModelingSettings({ ...modelingSettings, passThreshold: value[0] })}
+                    onValueChange={(value) =>
+                      setModelingSettings({
+                        ...modelingSettings,
+                        passThreshold: value[0],
+                      })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">Minimum probability threshold for topic assignment.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Minimum probability threshold for topic assignment.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -816,7 +1074,10 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
       </Tabs>
 
       <div className="flex justify-end">
-        <Button onClick={handleSaveSettings} className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90">
+        <Button
+          onClick={handleSaveSettings}
+          className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90"
+        >
           Save Advanced Settings
         </Button>
       </div>
@@ -829,5 +1090,5 @@ export function CampaignAdvancedSettings({ campaign, onSave }: CampaignAdvancedS
         description={infoModal.description}
       />
     </div>
-  )
+  );
 }
