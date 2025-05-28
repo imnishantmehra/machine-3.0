@@ -451,23 +451,22 @@ export function ContentPlannerCampaign({
     }
   };
 
+  // const searchTrendingTrend = async (query: string) => {
+  //   console.log("searchTrendingTrend");
+  //   try {
+  //     const response = await getTrendingContent(query);
 
-  const searchTrendingTrend = async (query: string) => {
-    console.log("searchTrendingTrend");
-    try {
-      const response = await getTrendingContent(query);
-
-      if (response.status === "success") {
-        console.log("Trending content fetched successfully:", response.message);
-        setTrendingTopics(response.message);
-      } else {
-        console.error("API Error Details:", JSON.stringify(response, null, 2));
-        throw new Error(response.message || "Failed to fetch trending content");
-      }
-    } catch (error) {
-      console.error("Error fetching trending content:", error);
-    }
-  };
+  //     if (response.status === "success") {
+  //       console.log("Trending content fetched successfully:", response.message);
+  //       setTrendingTopics(response.message);
+  //     } else {
+  //       console.error("API Error Details:", JSON.stringify(response, null, 2));
+  //       throw new Error(response.message || "Failed to fetch trending content");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching trending content:", error);
+  //   }
+  // };
 
   if (isLoading) {
     return (
@@ -532,6 +531,7 @@ export function ContentPlannerCampaign({
           {isSettingsMode ? (
             <CampaignSettings
               setSettings={setSettings}
+              trendingKeyword={trendingKeyword}
               campaign={{
                 id: editingId || "",
                 name: campaignName,
@@ -546,7 +546,7 @@ export function ContentPlannerCampaign({
                 extractionSettings: extractionSettings,
                 preprocessingSettings: preprocessingSettings,
                 entitySettings: entitySettings,
-                modelingSettings: modelingSettings,
+                modelingSettings: modelingSettings
               }}
               onSave={(updatedCampaign) => {
                 if (editingId) {
@@ -701,23 +701,23 @@ export function ContentPlannerCampaign({
                           onChange={(e) => setTrendingKeyword(e.target.value)}
                           placeholder="Enter keyword to find trending topics"
                         />
-                        <Button
-                          //   onClick={() => {
-                          //     if (trendingKeyword.trim()) {
-                          //       const mockTrendingTopics = [
-                          //         `#${trendingKeyword}Trends`,
-                          //         `${trendingKeyword} News`,
-                          //         `${trendingKeyword} Updates`,
-                          //         `${trendingKeyword} 2025`,
-                          //       ];
-                          //       setTrendingTopics(mockTrendingTopics);
-                          //     }
-                          //   }
-                          // }
+                        {/* <Button
+                            onClick={() => {
+                              if (trendingKeyword.trim()) {
+                                const mockTrendingTopics = [
+                                  `#${trendingKeyword}Trends`,
+                                  `${trendingKeyword} News`,
+                                  `${trendingKeyword} Updates`,
+                                  `${trendingKeyword} 2025`,
+                                ];
+                                setTrendingTopics(mockTrendingTopics);
+                              }
+                            }
+                          }
                           onClick={() => searchTrendingTrend(trendingKeyword)}
                         >
                           Search
-                        </Button>
+                        </Button> */}
                       </div>
                       {trendingTopics.length > 0 && (
                         <div className="border rounded-md p-4">
@@ -822,7 +822,7 @@ export function ContentPlannerCampaign({
                   <Link href={`/dashboard/campaigns/edit/${campaign.id}`}>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-2" />
-                      Editvv
+                      Edit
                     </Button>
                   </Link>
                   <Button

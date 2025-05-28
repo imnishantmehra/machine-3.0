@@ -48,6 +48,7 @@ import {
   AnalyzeTrendsInput,
   AnalyzeTrendsResponse,
   getAllCampaigns,
+  getTrendingContent,
 } from "@/components/Service";
 import { Campaign as CampaignBase } from "@/components/ContentPlannerCampaign";
 
@@ -116,6 +117,7 @@ interface CampaignSettingsProps {
 
 export function CampaignSettings({
   campaign,
+  trendingKeyword,
   setSettings,
   onSave,
   onCancel,
@@ -431,27 +433,27 @@ export function CampaignSettings({
   const handleBuildCampaign = async () => {
     setIsBuilding(true);
     try {
-      if (!name.trim()) {
-        throw new Error("Campaign name is required.");
-      }
-      if (!description.trim()) {
-        throw new Error("Campaign description is required.");
-      }
-      if (type === "url" && !urls.length) {
-        throw new Error(
-          "At least one URL is required for URL-based campaigns."
-        );
-      }
-      if (type === "keyword" && !keywords.length) {
-        throw new Error(
-          "At least one keyword is required for keyword-based campaigns."
-        );
-      }
-      if (type === "trending" && !campaign.trendingTopics?.length) {
-        throw new Error(
-          "At least one trending topic is required for trending campaigns."
-        );
-      }
+      // if (!name.trim()) {
+      //   throw new Error("Campaign name is required.");
+      // }
+      // if (!description.trim()) {
+      //   throw new Error("Campaign description is required.");
+      // }
+      // if (type === "url" && !urls.length) {
+      //   throw new Error(
+      //     "At least one URL is required for URL-based campaigns."
+      //   );
+      // }
+      // if (type === "keyword" && !keywords.length) {
+      //   throw new Error(
+      //     "At least one keyword is required for keyword-based campaigns."
+      //   );
+      // }
+      // if (type === "trending" && !campaign.trendingTopics?.length) {
+      //   throw new Error(
+      //     "At least one trending topic is required for trending campaigns."
+      //   );
+      // }
 
       const query = description.trim();
       // const urlString = type === "url" ? urls.join(", ") : "";
@@ -460,28 +462,28 @@ export function CampaignSettings({
       console.log("Trending topics:", campaign.trendingTopics);
       console.log("Keyword array:", keywordArray);
 
-      if (type === "url") {
-        urls.forEach((url) => {
-          try {
-            new URL(url);
-            if (url.includes("localhost")) {
-              throw new Error(
-                "Localhost URLs are not accessible by the server. Please use a public URL or ngrok."
-              );
-            }
-            if (url.includes("grok.com") || url.includes("chat.deepseek.com")) {
-              toast({
-                variant: "default",
-                title: "Warning",
-                description:
-                  "This URL may be protected by CAPTCHA or login requirements.",
-              });
-            }
-          } catch (e) {
-            throw new Error(`Invalid URL: ${url}`);
-          }
-        });
-      }
+      // if (type === "url") {
+      //   urls.forEach((url) => {
+      //     try {
+      //       new URL(url);
+      //       if (url.includes("localhost")) {
+      //         throw new Error(
+      //           "Localhost URLs are not accessible by the server. Please use a public URL or ngrok."
+      //         );
+      //       }
+      //       if (url.includes("grok.com") || url.includes("chat.deepseek.com")) {
+      //         toast({
+      //           variant: "default",
+      //           title: "Warning",
+      //           description:
+      //             "This URL may be protected by CAPTCHA or login requirements.",
+      //         });
+      //       }
+      //     } catch (e) {
+      //       throw new Error(`Invalid URL: ${url}`);
+      //     }
+      //   });
+      // }
 
       const payload: AnalyzeTrendsInput = {
         campaign_name: name.trim(),
@@ -508,9 +510,21 @@ export function CampaignSettings({
       };
 
       console.log("Payload sent to API:", JSON.stringify(payload, null, 2));
-      const response = await analyzeTrends(payload);
+      let response;
+      if (trendingKeyword.trim()) {
+        console.log("if");
 
-      console.log("API Response:", JSON.stringify(response, null, 2));
+        const Trendingpayload = {
+          trendingKeyword,
+          campaign_id: campaign.id || `campaign-${Date.now()}`,
+          campaign_name: name.trim(),
+          description: query
+        }
+        response = await getTrendingContent(Trendingpayload);
+      } else {
+        console.log("else");
+        response = await analyzeTrends(payload);
+      }
 
       if (response.status === "success") {
         const campaignDescription =
@@ -569,6 +583,7 @@ export function CampaignSettings({
 
         setSettings((prevCampaigns) => {
           if (campaign.id) {
+            console.log("campaign.id");
             return prevCampaigns.map((c) =>
               c.id === campaign.id ? newCampaign : c
             );

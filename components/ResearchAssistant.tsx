@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -46,6 +46,7 @@ export function ResearchAssistant({ campaign, onAddToQueue }: ResearchAssistantP
     ],
   )
   const [showAddToQueueButton, setShowAddToQueueButton] = useState(true)
+  const [storeAllValues, setstoreAllValues] = useState<{ [key: string]: any }>({})
 
   const handleRunAnalysis = () => {
     setIsLoading(true)
@@ -76,6 +77,7 @@ export function ResearchAssistant({ campaign, onAddToQueue }: ResearchAssistantP
     setShowAddToQueueButton(false)
   }
 
+  console.log("storeAllValues", storeAllValues);
   return (
     <div className="space-y-6">
       <Card>
@@ -129,23 +131,24 @@ export function ResearchAssistant({ campaign, onAddToQueue }: ResearchAssistantP
                 </TabsList>
 
                 <TabsContent value="word-cloud">
-                  <WordCloudContent campaign={campaign} handleItemSelect={handleItemSelect} />
+                  <WordCloudContent campaign={campaign} handleItemSelect={handleItemSelect}
+                    setstoreAllValues={setstoreAllValues} />
                 </TabsContent>
 
                 <TabsContent value="micro-sentiment">
-                  <MicroSentimentContent campaign={campaign} handleItemSelect={handleItemSelect} />
+                  <MicroSentimentContent campaign={campaign} handleItemSelect={handleItemSelect} setstoreAllValues={setstoreAllValues} />
                 </TabsContent>
 
                 <TabsContent value="topical-map">
-                  <TopicalMapContent campaign={campaign} onSelectItem={handleItemSelect} />
+                  <TopicalMapContent campaign={campaign} onSelectItem={handleItemSelect} setstoreAllValues={setstoreAllValues} />
                 </TabsContent>
 
                 <TabsContent value="knowledge-graph">
-                  <KnowledgeGraphContent campaign={campaign} handleItemSelect={handleItemSelect} />
+                  <KnowledgeGraphContent campaign={campaign} handleItemSelect={handleItemSelect} setstoreAllValues={setstoreAllValues} />
                 </TabsContent>
 
                 <TabsContent value="hashtag-generator">
-                  <HashtagGeneratorContent campaign={campaign} handleItemSelect={handleItemSelect} />
+                  <HashtagGeneratorContent campaign={campaign} handleItemSelect={handleItemSelect} setstoreAllValues={setstoreAllValues} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -196,19 +199,14 @@ interface ContentProps {
 function WordCloudContent({
   campaign,
   handleItemSelect,
+  setstoreAllValues
 }: {
   campaign: Campaign
   handleItemSelect: (item: any, isSelected: boolean) => void
+  setstoreAllValues: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>
 }) {
   // Add useEffect to trigger handleItemSelect for all items on initial render
-  const [checkedItems, setCheckedItems] = useState({
-    "keyword-marketing": true,
-    "keyword-content": true,
-    "keyword-strategy": true,
-    "keyword-digital": true,
-    "keyword-social": true,
-  })
-
+  const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({})
   const keywords = [
     { id: "marketing", name: "marketing", count: 42 },
     { id: "content", name: "content", count: 36 },
@@ -223,6 +221,60 @@ function WordCloudContent({
     { id: "conversion", name: "conversion", count: 6 },
     { id: "optimization", name: "optimization", count: 3 },
   ]
+
+  const [allTopics, setAllTopics] = useState([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("topics")
+    if (stored) {
+      const parsed: string[] = JSON.parse(stored)
+      setAllTopics(parsed)
+
+      // // Initialize all keywords as unchecked
+      // const initialCheckedState = parsed.reduce((acc, keyword) => {
+      //   acc[`keyword-${keyword}`] = false
+      //   return acc
+      // }, {} as { [key: string]: boolean })
+
+      // setCheckedItems(initialCheckedState)
+    }
+  }, [])
+
+  const handleCheckboxChange = (keyword: string, checked: boolean) => {
+    const id = `keyword-${keyword}`
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }))
+
+    const keywordData = {
+      id,
+      type: "keyword",
+      name: keyword,
+      source: "Word Cloud",
+    }
+
+    handleItemSelect(keywordData, checked)
+
+    setstoreAllValues((prev: any) => {
+      const prevTopics: string[] = prev.topics || []
+
+      if (checked) {
+        // Add keyword if not already present
+        if (!prevTopics.includes(keyword)) {
+          return {
+            ...prev,
+            topKeyword: [...prevTopics, keyword],
+          }
+        }
+        return prev // No change if already present
+      } else {
+        // Remove keyword if it exists
+        return {
+          ...prev,
+          topics: prevTopics.filter((item) => item !== keyword),
+        }
+      }
+    })
+  }
+
 
   return (
     <div className="space-y-4">
@@ -275,7 +327,7 @@ function WordCloudContent({
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="text-base">Top Keywords</CardTitle>
           </CardHeader>
@@ -417,6 +469,33 @@ function WordCloudContent({
               </div>
             </div>
           </CardContent>
+        </Card> */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top Keywords</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {allTopics.map((keyword, index) => {
+                const id = `keyword-${keyword}`
+                return (
+                  <div key={id}>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Checkbox
+                          id={id}
+                          checked={!!checkedItems[id]}
+                          onCheckedChange={(checked) => handleCheckboxChange(keyword, !!checked)}
+                          className="mr-2"
+                        />
+                        <label htmlFor={id}>{keyword}</label>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -517,13 +596,12 @@ function MicroSentimentContent({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div
-                        className={`bg-${
-                          sentiment.name === "Positive"
-                            ? "green-600"
-                            : sentiment.name === "Neutral"
-                              ? "gray-400"
-                              : "red-600"
-                        } h-2.5 rounded-full`}
+                        className={`bg-${sentiment.name === "Positive"
+                          ? "green-600"
+                          : sentiment.name === "Neutral"
+                            ? "gray-400"
+                            : "red-600"
+                          } h-2.5 rounded-full`}
                         style={{ width: `${sentiment.percentage}%` }}
                       ></div>
                     </div>

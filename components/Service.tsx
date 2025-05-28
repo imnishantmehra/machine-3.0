@@ -1,11 +1,19 @@
 import axios, { AxiosResponse } from "axios";
 
 const API_BASE_URL =
-  "https://7382-2405-201-3009-d013-dced-12c5-5df-dc28.ngrok-free.app";
+  "https://a558-2405-201-3009-d013-10f0-d0a6-369e-9c49.ngrok-free.app";
 
 /**
  * Generic service for making API calls
  */
+
+interface TrendingContentPayload {
+  trendingKeyword: string;
+  campaign_id: string;
+  campaign_name: string;
+  description: string;
+}
+
 export const Service = async (
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
@@ -392,49 +400,49 @@ export const analyzeTrends = async ({
   pass_threshold = 0.7,
 }: AnalyzeTrendsInput): Promise<AnalyzeTrendsResponse> => {
   // Validate campaign_name and campaign_id
-  if (!campaign_name?.trim()) {
-    return {
-      status: "error",
-      message: "Campaign name is required.",
-    };
-  }
-  if (!campaign_id?.trim()) {
-    return {
-      status: "error",
-      message: "Campaign ID is required.",
-    };
-  }
-  if (!query.trim()) {
-    return {
-      status: "error",
-      message: "Query is required.",
-    };
-  }
+  // if (!campaign_name?.trim()) {
+  //   return {
+  //     status: "error",
+  //     message: "Campaign name is required.",
+  //   };
+  // }
+  // if (!campaign_id?.trim()) {
+  //   return {
+  //     status: "error",
+  //     message: "Campaign ID is required.",
+  //   };
+  // }
+  // if (!query.trim()) {
+  //   return {
+  //     status: "error",
+  //     message: "Query is required.",
+  //   };
+  // }
 
-  // Validate based on campaign_type
-  if (campaign_type === "url") {
-    if (!urls.length) {
-      return {
-        status: "error",
-        message: "At least one URL is required for URL-based campaigns.",
-      };
-    }
-  } if (campaign_type === "keyword") {
-    if (!keywords || keywords.length === 0 || !keywords[0]?.trim()) {
-      return {
-        status: "error",
-        message:
-          "At least one keyword is required for keyword-based campaigns.",
-      };
-    }
-  } else if (campaign_type === "trending") {
-    if (!keywords || !keywords.length || !keywords[0]?.trim()) {
-      return {
-        status: "error",
-        message: "At least one keyword is required for trending campaigns.",
-      };
-    }
-  }
+  // // Validate based on campaign_type
+  // if (campaign_type === "url") {
+  //   if (!urls.length) {
+  //     return {
+  //       status: "error",
+  //       message: "At least one URL is required for URL-based campaigns.",
+  //     };
+  //   }
+  // } if (campaign_type === "keyword") {
+  //   if (!keywords || keywords.length === 0 || !keywords[0]?.trim()) {
+  //     return {
+  //       status: "error",
+  //       message:
+  //         "At least one keyword is required for keyword-based campaigns.",
+  //     };
+  //   }
+  // } else if (campaign_type === "trending") {
+  //   if (!keywords || !keywords.length || !keywords[0]?.trim()) {
+  //     return {
+  //       status: "error",
+  //       message: "At least one keyword is required for trending campaigns.",
+  //     };
+  //   }
+  // }
 
   // Validate URLs if provided
   // if (urls.trim()) {
@@ -466,12 +474,12 @@ export const analyzeTrends = async ({
   //   }
   // }
 
-  if (keywords.length === 0) {
-    return {
-      status: "error",
-      message: `Please add keywords`,
-    };
-  }
+  // if (keywords.length === 0) {
+  //   return {
+  //     status: "error",
+  //     message: `Please add keywords`,
+  //   };
+  // }
 
   try {
     const endpoint = "analyze";
@@ -627,11 +635,25 @@ export const deleteCampaignsById = async (campaign_id: string) => {
 };
 
 
-export const getTrendingContent = async (query: string) => {
+export const getTrendingContent = async (payload: TrendingContentPayload) => {
   try {
-    const endpoint = `search?query=${encodeURIComponent(query)}`;
+    const {
+      trendingKeyword,
+      campaign_id,
+      campaign_name,
+      description,
+    } = payload;
+
+    const queryParams = new URLSearchParams({
+      query: trendingKeyword,
+      campaign_id,
+      campaign_name,
+      description,
+    }).toString();
+
+    const endpoint = `search?${queryParams}`;
+
     const response = await Service(endpoint, "GET", undefined, undefined, false);
-    console.log("response getTrendingContent", response);
 
     if (response?.status === "success") {
       return {
@@ -657,3 +679,171 @@ export const getTrendingContent = async (query: string) => {
     };
   }
 };
+
+
+export const generateContent = async ({
+  campaign_name,
+  campaign_id,
+  urls = [],
+  query = "",
+  keywords = [],
+  campaign_type = "keyword",
+  depth = 3,
+  max_pages = 10,
+  batch_size = 1,
+  include_links = true,
+  stem = false,
+  lemmatize = false,
+  remove_stopwords_toggle = false,
+  extract_persons = false,
+  extract_organizations = false,
+  extract_locations = false,
+  extract_dates = false,
+  topic_tool = "lda",
+  num_topics = 3,
+  iterations = 25,
+  pass_threshold = 0.7,
+}: AnalyzeTrendsInput): Promise<AnalyzeTrendsResponse> => {
+
+  try {
+    const endpoint = "analyze";
+
+    const payload: AnalyzeTrendsInput = {
+      campaign_name,
+      campaign_id,
+      urls,
+      query,
+      keywords,
+      campaign_type,
+      depth,
+      max_pages,
+      batch_size,
+      include_links,
+      stem,
+      lemmatize,
+      remove_stopwords_toggle,
+      extract_persons,
+      extract_organizations,
+      extract_locations,
+      extract_dates,
+      topic_tool,
+      num_topics,
+      iterations,
+      pass_threshold,
+    };
+
+    console.log("API Payload:", JSON.stringify(payload, null, 2));
+    const response = await Service(endpoint, "POST", payload, undefined, false);
+
+    if (response?.status === "success") {
+      return {
+        status: "success",
+        task: response.task,
+        campaign_name: response.campaign_name,
+        campaign_id: response.campaign_id,
+        keywords: response.keywords || keywords,
+        posts: response.posts,
+        topics: response.topics,
+      };
+    } else {
+      console.error("Analyze failed:", response?.message || response?.error);
+      return {
+        status: "error",
+        message:
+          response?.message || response?.error || "Unexpected analyze response",
+      };
+    }
+  } catch (error) {
+    console.error("Error during analyze:", error);
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unexpected error occurred during analysis.",
+    };
+  }
+};
+
+
+export const generateContentAPI = async () => {
+  try {
+    const endpoint = "generate_content";
+
+    // Retrieve data from localStorage
+    const payloadData = localStorage.getItem("contentGenPayload");
+    const payloadTextData = localStorage.getItem("text");
+
+    // Parse JSON data from localStorage
+    let parsedPayload = {};
+    if (payloadData) {
+      parsedPayload = JSON.parse(payloadData);
+    }
+
+    console.log("parsedPayload", parsedPayload);
+
+    // Construct the URLSearchParams (application/x-www-form-urlencoded format)
+    const formParams = new URLSearchParams();
+
+    // Add topics: if keywords exist in localStorage, join them as comma-separated
+    formParams.append("topics", parsedPayload.keywords ? parsedPayload.keywords.join(",") : "AI, 2025");
+
+    // Add text: default to the sample text from localStorage if available
+    formParams.append("text", payloadTextData || "usme alag alag component the  isme alag hai");
+
+    // Add platforms: Join platforms array if available, else default to "Facebook"
+    if (Array.isArray(parsedPayload.activePlatforms) && parsedPayload.activePlatforms.length > 0) {
+      formParams.append("platforms", parsedPayload.activePlatforms.join(","));
+    } else {
+      formParams.append("platforms", "Facebook");  // Default value
+    }
+
+    // Add days: Join days array if available, else default to "Monday"
+    if (Array.isArray(parsedPayload.activeDays) && parsedPayload.activeDays.length > 0) {
+      formParams.append("days", parsedPayload.activeDays.join(","));
+    } else {
+      formParams.append("days", "Monday");  // Default value
+    }
+
+    // Add author: If available in localStorage, use it, otherwise default to empty
+    formParams.append("author", parsedPayload.author || "");
+
+    // Add sample_text: If available in localStorage, use it, otherwise default to payloadTextData
+    formParams.append("sample_text", payloadTextData || "usme alag alag component the  isme alag hai");
+
+    console.log("FormData Payload:", formParams.toString());
+
+    // Send request using URLSearchParams (application/x-www-form-urlencoded)
+    const response = await Service(endpoint, "POST", formParams, undefined, true);
+    console.log("response", response);
+
+    if (response?.status === "success") {
+      return {
+        status: "success",
+        task: response.task,
+        campaign_name: response.campaign_name,
+        campaign_id: response.campaign_id,
+        keywords: response.keywords || parsedPayload.keywords,
+        posts: response.generated_content,
+        topics: response.topics,
+      };
+    } else {
+      console.error("Analyze failed:", response?.message || response?.error);
+      return {
+        status: "error",
+        message:
+          response?.message || response?.error || "Unexpected analyze response",
+      };
+    }
+  } catch (error) {
+    console.error("Error during analyze:", error);
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unexpected error occurred during analysis.",
+    };
+  }
+};
+

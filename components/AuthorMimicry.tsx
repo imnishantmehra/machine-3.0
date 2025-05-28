@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -387,6 +387,7 @@ export function AuthorMimicry({
 
   // Handle saving a profile
   const handleSaveProfile = () => {
+    console.log("newProfileName", newProfileName);
     if (!analysisStatus.isComplete || !newProfileName.trim()) return
 
     const newProfile = {
@@ -402,6 +403,7 @@ export function AuthorMimicry({
 
   // Handle loading a profile
   const handleLoadProfile = (profileId: string) => {
+    console.log("sd");
     setSelectedProfile(profileId)
 
     // Simulate loading profile data
@@ -426,6 +428,7 @@ export function AuthorMimicry({
 
   // Handle profile checkbox selection
   const handleProfileCheckChange = (profileId: string) => {
+    console.log("asdas", profileId);
     setCheckedProfiles((prev) => {
       if (prev.includes(profileId)) {
         return prev.filter((id) => id !== profileId)
@@ -438,13 +441,23 @@ export function AuthorMimicry({
   // Replace the handleSelectProfile function with this updated version
   const handleSelectProfile = () => {
     if (checkedProfiles.length === 1) {
-      const selectedProfile = savedProfiles.find((p) => p.id === checkedProfiles[0])
+      const selectedProfile = savedProfiles.find((p) => p.id === checkedProfiles[0]);
       if (selectedProfile) {
-        setSelectedPersonalityName(selectedProfile.name)
-        setIsConfirmModalOpen(true)
+        // Save to localStorage
+        const data = localStorage.getItem("contentGenPayload") || "{}";
+        const parsed = JSON.parse(data);
+        const newData = { ...parsed, author: selectedProfile.name };
+
+        localStorage.setItem("contentGenPayload", JSON.stringify(newData));
+
+        // Set personality name and open modal
+        setSelectedPersonalityName(selectedProfile.name);
+        setIsConfirmModalOpen(true);
       }
     }
-  }
+  };
+
+
 
   // Add a new function to handle the confirmation
   const handleConfirmSelection = () => {
@@ -486,6 +499,22 @@ export function AuthorMimicry({
     })
   }
 
+  useEffect(() => {
+    const data = localStorage.getItem("contentGenPayload") || "{}";
+    const parsed = JSON.parse(data);
+    const savedAuthor = parsed.author;
+
+    if (savedAuthor) {
+      const matchedProfile = savedProfiles.find((profile) => profile.name === savedAuthor);
+      if (matchedProfile) {
+        setCheckedProfiles([matchedProfile.id]);
+        setSelectedProfile(matchedProfile.id);
+        setSelectedPersonalityName(matchedProfile.name);
+      }
+    }
+  }, [savedProfiles]); // Run this after savedProfiles are available
+
+
   return (
     <div className="space-y-6">
       {/* Conditionally render the Saved Author Profiles Section */}
@@ -496,7 +525,7 @@ export function AuthorMimicry({
               <CardHeader className="cursor-pointer">
                 <CardTitle className="flex items-center">
                   <BookOpen className="mr-2 h-5 w-5" />
-                  Saved Author Profiles
+                  Saved Author Profilesasd
                 </CardTitle>
               </CardHeader>
             </CollapsibleTrigger>
@@ -508,9 +537,8 @@ export function AuthorMimicry({
                       {savedProfiles.map((profile) => (
                         <div
                           key={profile.id}
-                          className={`p-3 border rounded-md flex items-center justify-between ${
-                            selectedProfile === profile.id ? "bg-gray-100 border-gray-400" : "hover:bg-gray-50"
-                          }`}
+                          className={`p-3 border rounded-md flex items-center justify-between ${selectedProfile === profile.id ? "bg-gray-100 border-gray-400" : "hover:bg-gray-50"
+                            }`}
                         >
                           <div className="flex items-center space-x-3">
                             <Checkbox

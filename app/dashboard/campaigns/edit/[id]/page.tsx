@@ -313,11 +313,9 @@ export default function EditCampaignPage() {
   ];
 
   useEffect(() => {
-    console.log("zsdf");
     if (!campaignId) return;
     // In a real app, this would be an API call
     const fetchCampaign = async () => {
-      console.log("zsdczsc");
       setIsLoading(true);
       try {
 
@@ -325,7 +323,8 @@ export default function EditCampaignPage() {
 
         if (editableCampaigns.status === "success") {
           const editableCampaignsFound = editableCampaigns.message.raw_data[0]
-          console.log("editableCampaignsFound", editableCampaignsFound);
+          localStorage.setItem("topics", JSON.stringify(editableCampaignsFound.topics))
+          localStorage.setItem("text", JSON.stringify(editableCampaignsFound.lemmatized_text))
           setCampaign(editableCampaignsFound);
           setCampaignName(editableCampaignsFound.campaign_name);
           setCampaignDescription(editableCampaignsFound.query);
@@ -379,7 +378,6 @@ export default function EditCampaignPage() {
         //     });
         //   }
         // }
-        console.log("dfg");
       } catch (err) {
         setError({
           isOpen: true,
@@ -746,7 +744,7 @@ export default function EditCampaignPage() {
                     className="flex items-center"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    <span>Content Queue</span>
+                    <span> Content Queue ssdf</span>
                   </TabsTrigger>
                   <TabsTrigger value="trending" className="flex items-center">
                     <TrendingUp className="h-4 w-4 mr-2" />

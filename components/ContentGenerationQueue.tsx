@@ -81,7 +81,7 @@ const platformIcons = {
 }
 
 // Sample days and platforms (matching Author Planning)
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAYS = ["Sunday", "Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const PLATFORMS = [
   { name: "Instagram", icon: Instagram },
   { name: "Facebook", icon: Facebook },

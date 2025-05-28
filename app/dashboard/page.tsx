@@ -123,7 +123,7 @@ interface TimeSlot {
   image: string;
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS = ["Sunday", "Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const PLATFORMS = [
   { name: "Instagram", icon: Instagram },
@@ -270,7 +270,12 @@ export default function Dashboard() {
     setActiveDays(days);
   };
 
+  useEffect(() => {
+    console.log('sdsdsad');
+  }, [activeDays])
+
   const handleUpdateActivePlatforms = (platforms: string[]) => {
+    console.log("sf");
     setActivePlatforms(platforms);
   };
 
@@ -629,9 +634,7 @@ export default function Dashboard() {
                         </ToggleGroup>
                       </div>
                       <div>
-                        <h3 className="text-[1.1rem] font-semibold mb-2">
-                          Active Platforms
-                        </h3>
+                        <h3 className="text-[1.1rem] font-semibold mb-2">Active Platforms</h3>
                         <ToggleGroup
                           type="multiple"
                           value={activePlatforms}
@@ -644,9 +647,7 @@ export default function Dashboard() {
                                 <ToggleGroupItem
                                   value={platform.name}
                                   aria-label={platform.name}
-                                  className={`p-2 flex-1 justify-center platform-button ${activePlatforms.includes(platform.name)
-                                    ? "active-platform"
-                                    : ""
+                                  className={`p-2 flex-1 justify-center platform-button ${activePlatforms.includes(platform.name) ? "active-platform" : ""
                                     }`}
                                 >
                                   <platform.icon className="w-6 h-6" />
@@ -659,6 +660,7 @@ export default function Dashboard() {
                           ))}
                         </ToggleGroup>
                       </div>
+
                       <div className="pt-4">
                         {currentStep === 1 ? (
                           <Button
@@ -945,6 +947,7 @@ export default function Dashboard() {
                           onAddCampaign={handleAddCampaign}
                           onEditCampaign={handleEditCampaign}
                           onDeleteCampaign={handleDeleteCampaign}
+
                         />
                       </TabsContent>
 
