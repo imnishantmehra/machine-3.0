@@ -1032,7 +1032,7 @@ export default function EditCampaignPage() {
               <TabsContent value="trending" className="relative z-10 mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Trending Topicsssss</CardTitle>
+                    <CardTitle>Trending Topics</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Tabs

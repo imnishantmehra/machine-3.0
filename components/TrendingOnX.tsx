@@ -14,14 +14,13 @@ interface TrendingOnXProps {
 }
 
 export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps) {
-  console.log("trendingContent", trendingContent);
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [trendingTopic, setTrendingTopic] = useState([])
 
-  useEffect(() => {
-    setTrendingTopic(trendingContent)
-  }, [])
+  // useEffect(() => {
+  //   setTrendingTopic(trendingContent)
+  // }, [])
 
   // Default trending topics
   // const trendingTopics = [
@@ -42,28 +41,29 @@ export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps)
   }
 
   const handleAddToQueue = () => {
+    return
     // Read existing data or initialize to empty object
-    const data = localStorage.getItem("contentGenPayload") || "{}";
-    const parsed = JSON.parse(data);
+    // const data = localStorage.getItem("contentGenPayload") || "{}";
+    // const parsed = JSON.parse(data);
 
-    // Add the trendingTopic key with the selectedTopics array
-    const newData = {
-      ...parsed,
-      trendingTopic: selectedTopics, // Ensure selectedTopics is in scope
-    };
+    // // Add the trendingTopic key with the selectedTopics array
+    // const newData = {
+    //   ...parsed,
+    //   trendingTopic: selectedTopics, // Ensure selectedTopics is in scope
+    // };
 
-    // Save it back to localStorage
-    localStorage.setItem("contentGenPayload", JSON.stringify(newData));
+    // // Save it back to localStorage
+    // localStorage.setItem("contentGenPayload", JSON.stringify(newData));
   };
 
-  useEffect(() => {
-    const data = localStorage.getItem("contentGenPayload") || "{}";
-    const parsed = JSON.parse(data);
-    const savedTopics: string[] = parsed.trendingTopic || [];
+  // useEffect(() => {
+  //   const data = localStorage.getItem("contentGenPayload") || "{}";
+  //   const parsed = JSON.parse(data);
+  //   const savedTopics: string[] = parsed.trendingTopic || [];
 
-    // Make sure savedTopics is an array of strings (topic.text values)
-    setSelectedTopics(savedTopics);
-  }, []);
+  //   // Make sure savedTopics is an array of strings (topic.text values)
+  //   setSelectedTopics(savedTopics);
+  // }, []);
 
 
   return (
