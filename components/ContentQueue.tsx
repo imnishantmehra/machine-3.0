@@ -130,59 +130,7 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
               </Button>
             )}
           </CardHeader>
-          {/* <CardContent className="p-4">
-            {queueItems.length > 0 ? (
-              <div className="space-y-4">
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-2 text-left w-10"></th>
-                        <th className="px-4 py-2 text-left">Item</th>
-                        <th className="px-4 py-2 text-left">Type</th>
-                        <th className="px-4 py-2 text-left">Source</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {queueItems.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-2">
-                            <Checkbox
-                              id={`check-${item.id}`}
-                              checked={checkedItems[item.id]}
-                              onCheckedChange={(checked) => handleCheckChange(item.id, checked as boolean)}
-                            />
-                          </td>
-                          <td className="px-4 py-2 font-medium">{item.name}</td>
-                          <td className="px-4 py-2">{item.type}</td>
-                          <td className="px-4 py-2">{item.source}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Button
-                    className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90"
-                    onClick={handleConfigureContentCreation}
-                  >
-                    Continue & Configure Content Creation with Checked
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 rounded-full p-6 inline-block mb-4">
-                  <FileText className="w-12 h-12 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">No Items in Queue</h3>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  Select items from the research tabs to add them to your content queue for further processing and
-                  content creation.
-                </p>
-              </div>
-            )}
-          </CardContent> */}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Top Keywords</CardTitle>

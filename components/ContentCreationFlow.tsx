@@ -19,19 +19,22 @@ import {
   X,
   Wand2,
   Upload,
-  ChevronLeft,
-  Link,
 } from "lucide-react";
 import {
   Tooltip,
-  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { Instagram, Facebook, Twitter, Linkedin, Music } from "lucide-react";
 
-import { generateContentAPI, generateImageMachineContent } from "./Service";
+import {
+  generateContentAPI,
+  regenerateContentAPI,
+  generateImageMachineContent,
+} from "./Service";
+
 import { Header } from "./Header";
 
 interface ContentCreationFlowProps {
@@ -49,15 +52,19 @@ export function ContentCreationFlow({
   onClose,
 }: ContentCreationFlowProps) {
   const [currentStep, setCurrentStep] = useState(1);
-
   const [contentIdeas, setContentIdeas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const [regeneratingContent, setRegeneratingContent] = useState<string | null>(
     null
   );
-
   const [regeneratingImage, setRegeneratingImage] = useState(null);
+
+  // State to store contentGenPayload from localStorage
+  const [contentGenPayload, setContentGenPayload] = useState(() => {
+    const stored = localStorage.getItem("contentGenPayload");
+    return stored ? JSON.parse(stored) : {};
+  });
 
   type Platform = "Instagram" | "Facebook" | "Twitter" | "LinkedIn" | "TikTok";
 
@@ -89,22 +96,44 @@ export function ContentCreationFlow({
     setContentIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
   };
 
-  const handleRegenerateContent = (ideaId: string) => {
+  const handleRegenerateContent = async (ideaId) => {
     setRegeneratingContent(ideaId);
-    setTimeout(() => {
-      setContentIdeas((prev) =>
-        prev.map((idea) =>
-          idea.id === ideaId
-            ? {
-                ...idea,
-                title: `${idea.title}`,
-                description: `This content has been regenerated with AI to better match your brand voice and target audience.`,
-              }
-            : idea
-        )
-      );
+    try {
+      const idea = contentIdeas.find((item) => item.id === ideaId);
+      if (!idea) {
+        console.error("Idea not found:", ideaId);
+        return;
+      }
+
+      const platform = idea.platforms[0] || "Twitter";
+      const response = await regenerateContentAPI({
+        id: ideaId,
+        query: idea.description,
+        platform,
+      });
+
+      if (response.status === "success") {
+        setContentIdeas((prev) =>
+          prev.map((item) =>
+            item.id === ideaId
+              ? {
+                  ...item,
+                  title: response.message.title || item.title,
+                  description: response.message.content || item.description,
+                  platforms: [response.message.platform] || item.platforms,
+                  keywords: item.keywords,
+                }
+              : item
+          )
+        );
+      } else {
+        console.error("Regeneration failed:", response.message);
+      }
+    } catch (error) {
+      console.error("Error regenerating content:", error);
+    } finally {
       setRegeneratingContent(null);
-    }, 1500);
+    }
   };
 
   const handleRegenerateImage = async (ideaId: string, content: string) => {
@@ -120,7 +149,6 @@ export function ContentCreationFlow({
             const isMatch = idea.id === Number(ideaId);
 
             if (isMatch) {
-              // const updated = { ...idea, image: response.message };
               const updated = {
                 ...idea,
                 image: `${response.message}?t=${Date.now()}`,
@@ -139,8 +167,6 @@ export function ContentCreationFlow({
       setRegeneratingImage(null);
     }
   };
-
-  useEffect(() => {}, [contentIdeas]);
 
   const getContentGenPayload = (): any => {
     const data = localStorage.getItem("contentGenPayload") || "{}";
@@ -178,7 +204,21 @@ export function ContentCreationFlow({
     const current = getContentGenPayload();
     const updated = { ...current, ...updates };
     localStorage.setItem("contentGenPayload", JSON.stringify(updated));
+    setContentGenPayload(updated);
   };
+
+  // Effect to monitor changes to contentGenPayload in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem("contentGenPayload");
+      setContentGenPayload(stored ? JSON.parse(stored) : {});
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     updateContentGenPayload({ activeDays });
@@ -336,10 +376,10 @@ export function ContentCreationFlow({
                           <ToggleGroupItem
                             value={platform}
                             aria-label={platform}
-                            className={`p-2 flex-1 justify-center platform-button ${
+                            className={`p-2 flex-1 justify-center platform-button flex items-center transition${
                               activePlatforms.includes(platform)
-                                ? "active-platform"
-                                : ""
+                                ? "active-platform bg-muted text-black"
+                                : "text-black hover:bg-gray-100"
                             }`}
                           >
                             {icon}
@@ -360,12 +400,18 @@ export function ContentCreationFlow({
                   </h3>
                   <div className="max-h-40 overflow-y-auto">
                     <ul className="space-y-1">
-                      {selectedItems.map((item) => (
-                        <li key={item.id} className="text-sm text-blue-700">
-                          • {item.name}{" "}
-                          <span className="text-blue-500">({item.source})</span>
+                      {contentGenPayload.keywords?.length > 0 && (
+                        <li className="text-sm text-blue-700">
+                          Topics:
+                          <ul className="ml-4 mt-1 list-disc text-blue-500">
+                            {contentGenPayload.keywords.map(
+                              (topic: string, index: number) => (
+                                <li key={index}>{topic}</li>
+                              )
+                            )}
+                          </ul>
                         </li>
-                      ))}
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -484,7 +530,6 @@ export function ContentCreationFlow({
                               <span className="text-sm text-gray-500">
                                 Platforms:
                               </span>
-
                               {idea.platforms.map((platform) =>
                                 isValidPlatform(platform) ? (
                                   <span

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 
 const API_BASE_URL =
-  "https://a558-2405-201-3009-d013-10f0-d0a6-369e-9c49.ngrok-free.app";
+  "https://736c-2405-201-3009-d013-6dbe-2995-7082-cd7e.ngrok-free.app";
 
 /**
  * Generic service for making API calls
@@ -316,6 +316,105 @@ export const resetPassword = async ({
 };
 
 /**
+ * Call the /linkedin/auth endpoint
+ * @param urls - List of LinkedIn URLs
+ */
+export const linkedinConnect = async (): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return;
+    }
+
+    const response = await Service("linkedin/auth-v2", "GET", {});
+
+    if (response?.auth_url) {
+      window.location.href = response.auth_url;
+    } else {
+      console.error("No auth_url in response");
+    }
+  } catch (error) {
+    console.error("Error during LinkedIn connection:", error);
+  }
+};
+
+/**
+ * Call the /twitter/auth endpoint
+ * @param urls - List of LinkedIn URLs
+ */
+export const twitterConnect = async (): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return;
+    }
+
+    const response = await Service("twitter/auth-v2", "GET", {});
+    console.log("Twitter auth response:", response);
+
+    if (response?.redirect_url) {
+      window.location.href = response.redirect_url;
+    } else {
+      console.error("No redirect_url in response");
+    }
+  } catch (error) {
+    console.error("Error during LinkedIn connection:", error);
+  }
+};
+
+/**
+ * Call the /wordpress/auth endpoint
+ * @param site_url - WordPress site URL
+ * @param username - WordPress username
+ * @param password - WordPress password
+ */
+
+export const wordpressConnect = async (
+  site_url: string,
+  username: string,
+  password: string
+): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return;
+    }
+
+    const formBody = new URLSearchParams();
+    formBody.append("site_url", site_url);
+    formBody.append("username", username);
+    formBody.append("password", password);
+
+    const response = await fetch(`${API_BASE_URL}/wordpress/auth-v2`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formBody,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("WordPress connected successfully:", data);
+    } else {
+      console.error("Failed to connect to WordPress:", data);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error during WordPress connection:", error);
+  }
+};
+
+/**
  * Input parameters for the analyzeTrends API
  */
 export interface AnalyzeTrendsInput {
@@ -399,88 +498,6 @@ export const analyzeTrends = async ({
   iterations = 25,
   pass_threshold = 0.7,
 }: AnalyzeTrendsInput): Promise<AnalyzeTrendsResponse> => {
-  // Validate campaign_name and campaign_id
-  // if (!campaign_name?.trim()) {
-  //   return {
-  //     status: "error",
-  //     message: "Campaign name is required.",
-  //   };
-  // }
-  // if (!campaign_id?.trim()) {
-  //   return {
-  //     status: "error",
-  //     message: "Campaign ID is required.",
-  //   };
-  // }
-  // if (!query.trim()) {
-  //   return {
-  //     status: "error",
-  //     message: "Query is required.",
-  //   };
-  // }
-
-  // // Validate based on campaign_type
-  // if (campaign_type === "url") {
-  //   if (!urls.length) {
-  //     return {
-  //       status: "error",
-  //       message: "At least one URL is required for URL-based campaigns.",
-  //     };
-  //   }
-  // } if (campaign_type === "keyword") {
-  //   if (!keywords || keywords.length === 0 || !keywords[0]?.trim()) {
-  //     return {
-  //       status: "error",
-  //       message:
-  //         "At least one keyword is required for keyword-based campaigns.",
-  //     };
-  //   }
-  // } else if (campaign_type === "trending") {
-  //   if (!keywords || !keywords.length || !keywords[0]?.trim()) {
-  //     return {
-  //       status: "error",
-  //       message: "At least one keyword is required for trending campaigns.",
-  //     };
-  //   }
-  // }
-
-  // Validate URLs if provided
-  // if (urls.trim()) {
-  //   const urlList = urls
-  //     .split(",")
-  //     .map((url) => url.trim())
-  //     .filter(Boolean);
-  //   for (const url of urlList) {
-  //     try {
-  //       new URL(url);
-  //       if (!url.match(/^(https?:\/\/)/)) {
-  //         return {
-  //           status: "error",
-  //           message: `URL must start with http:// or https://: ${url}`,
-  //         };
-  //       }
-  //       if (url.includes("localhost")) {
-  //         return {
-  //           status: "error",
-  //           message: `Localhost URLs are not accessible by the server: ${url}`,
-  //         };
-  //       }
-  //     } catch {
-  //       return {
-  //         status: "error",
-  //         message: `Invalid URL: ${url}`,
-  //       };
-  //     }
-  //   }
-  // }
-
-  // if (keywords.length === 0) {
-  //   return {
-  //     status: "error",
-  //     message: `Please add keywords`,
-  //   };
-  // }
-
   try {
     const endpoint = "analyze";
 
@@ -870,6 +887,37 @@ export const generateContentAPI = async () => {
         error instanceof Error
           ? error.message
           : "Unexpected error occurred during analysis.",
+    };
+  }
+};
+export const regenerateContentAPI = async ({ id, query, platform }) => {
+  try {
+    const endpoint = `regenerate_script_machine_content?id=${id}&query=${encodeURIComponent(
+      query
+    )}&platform=${platform}`;
+
+    const response = await Service(endpoint, "PUT", null, undefined, true);
+
+    if (response?.status === "success") {
+      return {
+        status: "success",
+        message: response.content,
+      };
+    } else {
+      console.error("Regenerate failed:", response?.message || response?.error);
+      return {
+        status: "error",
+        message:
+          response?.message ||
+          response?.error ||
+          "Unexpected regenerate response",
+      };
+    }
+  } catch (error) {
+    console.error("Error during regenerate:", error);
+    return {
+      status: "error",
+      message: "Content regeneration failed due to unexpected error.",
     };
   }
 };

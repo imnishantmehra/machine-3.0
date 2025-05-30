@@ -140,7 +140,7 @@ export function CampaignSettings({
     webScrapingDepth: campaign.extractionSettings?.webScrapingDepth ?? 2,
     includeImages: campaign.extractionSettings?.includeImages ?? true,
     includeLinks: campaign.extractionSettings?.includeLinks ?? true,
-    maxPages: campaign.extractionSettings?.maxPages ?? 10,
+    maxPages: campaign.extractionSettings?.maxPages ?? 1,
     batchSize: campaign.extractionSettings?.batchSize ?? 10,
   });
 
@@ -867,9 +867,9 @@ export function CampaignSettings({
                   </div>
                   <Slider
                     id="max-pages"
-                    min={10}
-                    max={1000}
-                    step={10}
+                    min={1}
+                    max={20}
+                    step={1}
                     value={[extractionSettings.maxPages]}
                     onValueChange={(value) =>
                       setExtractionSettings({

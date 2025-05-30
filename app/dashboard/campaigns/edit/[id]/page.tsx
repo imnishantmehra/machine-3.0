@@ -61,7 +61,7 @@ const SAMPLE_CAMPAIGNS: Campaign[] = [
       webScrapingDepth: 2,
       includeImages: true,
       includeLinks: true,
-      maxPages: 100,
+      maxPages: 20,
       batchSize: 10,
     },
     preprocessingSettings: {

@@ -112,7 +112,7 @@ export function ContentPlannerCampaign({
     webScrapingDepth: 2,
     includeImages: true,
     includeLinks: true,
-    maxPages: 100,
+    maxPages: 1,
     batchSize: 10,
   });
 
@@ -165,7 +165,7 @@ export function ContentPlannerCampaign({
       webScrapingDepth: 2,
       includeImages: true,
       includeLinks: true,
-      maxPages: 100,
+      maxPages: 1,
       batchSize: 10,
     });
     setPreprocessingSettings({
