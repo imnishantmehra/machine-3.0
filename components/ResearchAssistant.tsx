@@ -517,7 +517,7 @@ function WordCloudContent({
         </Card> */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top Keywords</CardTitle>
+            <CardTitle className="text-base">Top Keywordsff</CardTitle>
           </CardHeader>
           <CardContent className="p-4">
             <div className="space-y-3">
@@ -655,13 +655,12 @@ function MicroSentimentContent({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div
-                        className={`bg-${
-                          sentiment.name === "Positive"
-                            ? "green-600"
-                            : sentiment.name === "Neutral"
+                        className={`bg-${sentiment.name === "Positive"
+                          ? "green-600"
+                          : sentiment.name === "Neutral"
                             ? "gray-400"
                             : "red-600"
-                        } h-2.5 rounded-full`}
+                          } h-2.5 rounded-full`}
                         style={{ width: `${sentiment.percentage}%` }}
                       ></div>
                     </div>
@@ -979,6 +978,47 @@ function TopicalMapContent({
     { id: "audienceEngagement", name: "Audience Engagement", coverage: 8 },
   ];
 
+  [
+    { "keyword": "React", "color": "#61dafb" },
+    { "keyword": "TypeScript", "color": "#3178c6" }
+  ]
+
+
+  const [allTopics, setAllTopics] = useState([]);
+
+  const colorPalette = [
+    "#FF5733", // Red-Orange
+    "#33C1FF", // Sky Blue
+    "#33FF57", // Green
+    "#FF33A8", // Pink
+    "#8D33FF", // Purple
+    "#FFC133", // Orange
+    "#4BFFDB", // Teal
+    "#FFD733", // Yellow
+  ];
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem("topics");
+    if (stored) {
+      const parsed: string[] = JSON.parse(stored);
+
+      const colorPalette = [
+        "#FF5733", "#33C1FF", "#33FF57", "#FF33A8",
+        "#8D33FF", "#FFC133", "#4BFFDB", "#FFD733",
+      ];
+
+      const parsedData = parsed.map((item, index) => ({
+        keyword: item,
+        color: colorPalette[index % colorPalette.length],
+      }));
+
+      setAllTopics(parsedData);
+    }
+  }, []);
+
+
+
   return (
     <div className="space-y-4">
       <Card>
@@ -1117,7 +1157,26 @@ function TopicalMapContent({
             <CardTitle className="text-base">Topic Relationships</CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="space-y-4">
+            <div className="space-y-3">
+              {allTopics?.map(({ keyword, color }) => {
+                const id = `keyword-${keyword}`;
+                return (
+                  <div key={id}>
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className="w-3 h-3 rounded-full inline-block"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      ></span>
+                      <span>{keyword}</span>
+                    </div>
+                  </div>
+                );
+              })}
+
+
+            </div>
+            {/* <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Checkbox
@@ -1280,10 +1339,10 @@ function TopicalMapContent({
                   <span className="font-medium">Medium</span>
                 </div>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="text-base">Topical Insights</CardTitle>
           </CardHeader>
@@ -1320,7 +1379,7 @@ function TopicalMapContent({
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
@@ -1850,271 +1909,6 @@ function HashtagGeneratorContent({
             <CardTitle className="text-base">Hashtag Categories</CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="space-y-6">
-              <div>
-                <h4 className="font-medium mb-2 flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                  Industry Hashtags
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs text-blue-700">
-                    <Checkbox
-                      id="hashtag-category-digitalMarketing"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-digitalMarketing",
-                            type: "hashtag-category",
-                            name: "#DigitalMarketing",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#DigitalMarketing</span>
-                  </div>
-                  <div className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs text-blue-700">
-                    <Checkbox
-                      id="hashtag-category-marketingStrategy"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-marketingStrategy",
-                            type: "hashtag-category",
-                            name: "#MarketingStrategy",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#MarketingStrategy</span>
-                  </div>
-                  <div className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs text-blue-700">
-                    <Checkbox
-                      id="hashtag-category-contentMarketing"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-contentMarketing",
-                            type: "hashtag-category",
-                            name: "#ContentMarketing",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#ContentMarketing</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2 flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                  Trending Hashtags
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center bg-green-50 px-2 py-1 rounded text-xs text-green-700">
-                    <Checkbox
-                      id="hashtag-category-marketingTips"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-marketingTips",
-                            type: "hashtag-category",
-                            name: "#MarketingTips",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#MarketingTips</span>
-                  </div>
-                  <div className="flex items-center bg-green-50 px-2 py-1 rounded text-xs text-green-700">
-                    <Checkbox
-                      id="hashtag-category-digitalSuccess"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-digitalSuccess",
-                            type: "hashtag-category",
-                            name: "#DigitalSuccess",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#DigitalSuccess</span>
-                  </div>
-                  <div className="flex items-center bg-green-50 px-2 py-1 rounded text-xs text-green-700">
-                    <Checkbox
-                      id="hashtag-category-contentStrategy"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-contentStrategy",
-                            type: "hashtag-category",
-                            name: "#ContentStrategy",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#ContentStrategy</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2 flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
-                  Niche Hashtags
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center bg-purple-50 px-2 py-1 rounded text-xs text-purple-700">
-                    <Checkbox
-                      id="hashtag-category-marketingAnalytics"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-marketingAnalytics",
-                            type: "hashtag-category",
-                            name: "#MarketingAnalytics",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#MarketingAnalytics</span>
-                  </div>
-                  <div className="flex items-center bg-purple-50 px-2 py-1 rounded text-xs text-purple-700">
-                    <Checkbox
-                      id="hashtag-category-brandAwareness"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-brandAwareness",
-                            type: "hashtag-category",
-                            name: "#BrandAwareness",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#BrandAwareness</span>
-                  </div>
-                  <div className="flex items-center bg-purple-50 px-2 py-1 rounded text-xs text-purple-700">
-                    <Checkbox
-                      id="hashtag-category-socialMediaMarketing"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-socialMediaMarketing",
-                            type: "hashtag-category",
-                            name: "#SocialMediaMarketing",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#SocialMediaMarketing</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2 flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-                  Campaign-Specific Hashtags
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-xs text-yellow-700">
-                    <Checkbox
-                      id="hashtag-category-brandGrowth"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-brandGrowth",
-                            type: "hashtag-category",
-                            name: "#BrandGrowth",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#BrandGrowth</span>
-                  </div>
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-xs text-yellow-700">
-                    <Checkbox
-                      id="hashtag-category-businessGrowth"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-businessGrowth",
-                            type: "hashtag-category",
-                            name: "#BusinessGrowth",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#BusinessGrowth</span>
-                  </div>
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-xs text-yellow-700">
-                    <Checkbox
-                      id="hashtag-category-contentCreation"
-                      checked={true}
-                      onCheckedChange={(checked) =>
-                        handleItemSelect(
-                          {
-                            id: "hashtag-category-contentCreation",
-                            type: "hashtag-category",
-                            name: "#ContentCreation",
-                            source: "Hashtag Categories",
-                          },
-                          !!checked
-                        )
-                      }
-                      className="mr-1 h-3 w-3"
-                    />
-                    <span>#ContentCreation</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
         <Card>

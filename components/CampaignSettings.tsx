@@ -109,6 +109,7 @@ interface Campaign1 extends CampaignBase {
 interface CampaignSettingsProps {
   setSettings: Dispatch<SetStateAction<Campaign[]>>;
   campaign: Campaign;
+  trendingKeyword?: string; // Made optional to align with usage
   onSave: (
     updatedCampaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">
   ) => void;
@@ -117,7 +118,7 @@ interface CampaignSettingsProps {
 
 export function CampaignSettings({
   campaign,
-  trendingKeyword,
+  trendingKeyword = "", // Default to empty string
   setSettings,
   onSave,
   onCancel,
@@ -160,7 +161,7 @@ export function CampaignSettings({
   });
 
   const [modelingSettings, setModelingSettings] = useState({
-    algorithm: campaign.modelingSettings?.algorithm ?? "lda",
+    algorithm: campaign.modelingSettings?.algorithm ?? "llm", // Changed default to "llm"
     numTopics: campaign.modelingSettings?.numTopics ?? 5,
     iterations: campaign.modelingSettings?.iterations ?? 10,
     passThreshold: campaign.modelingSettings?.passThreshold ?? 0.5,
@@ -323,6 +324,9 @@ export function CampaignSettings({
     algorithm: (
       <div className="space-y-4">
         <div>
+          <strong>LLM:</strong> Uses advanced large language models for context-aware topic modeling. Ideal for nuanced and complex datasets.
+        </div>
+        <div>
           <strong>LDA:</strong> Classic method (like sorting docs into folders).
           Needs 10-20 topics.
         </div>
@@ -381,7 +385,6 @@ export function CampaignSettings({
     if (keywordInput.trim()) {
       setKeywords((prevState) => [...prevState, keywordInput.trim()]);
       setKeywordInput("");
-      console.log("keywods", keywords);
     }
   };
 
@@ -399,7 +402,6 @@ export function CampaignSettings({
         new URL(urlToAdd);
         if (urlToAdd.includes("grok.com")) {
           toast({
-            // variant: "warning",
             title: "Warning",
             description:
               "Grok.com is protected by Cloudflare and may not be scrapeable.",
@@ -433,57 +435,8 @@ export function CampaignSettings({
   const handleBuildCampaign = async () => {
     setIsBuilding(true);
     try {
-      // if (!name.trim()) {
-      //   throw new Error("Campaign name is required.");
-      // }
-      // if (!description.trim()) {
-      //   throw new Error("Campaign description is required.");
-      // }
-      // if (type === "url" && !urls.length) {
-      //   throw new Error(
-      //     "At least one URL is required for URL-based campaigns."
-      //   );
-      // }
-      // if (type === "keyword" && !keywords.length) {
-      //   throw new Error(
-      //     "At least one keyword is required for keyword-based campaigns."
-      //   );
-      // }
-      // if (type === "trending" && !campaign.trendingTopics?.length) {
-      //   throw new Error(
-      //     "At least one trending topic is required for trending campaigns."
-      //   );
-      // }
-
       const query = description.trim();
-      // const urlString = type === "url" ? urls.join(", ") : "";
-      const keywordArray = keywords; // Send array of individual keywords
-      console.log("Keywords state:", keywords);
-      console.log("Trending topics:", campaign.trendingTopics);
-      console.log("Keyword array:", keywordArray);
-
-      // if (type === "url") {
-      //   urls.forEach((url) => {
-      //     try {
-      //       new URL(url);
-      //       if (url.includes("localhost")) {
-      //         throw new Error(
-      //           "Localhost URLs are not accessible by the server. Please use a public URL or ngrok."
-      //         );
-      //       }
-      //       if (url.includes("grok.com") || url.includes("chat.deepseek.com")) {
-      //         toast({
-      //           variant: "default",
-      //           title: "Warning",
-      //           description:
-      //             "This URL may be protected by CAPTCHA or login requirements.",
-      //         });
-      //       }
-      //     } catch (e) {
-      //       throw new Error(`Invalid URL: ${url}`);
-      //     }
-      //   });
-      // }
+      const keywordArray = keywords;
 
       const payload: AnalyzeTrendsInput = {
         campaign_name: name.trim(),
@@ -503,7 +456,7 @@ export function CampaignSettings({
         extract_organizations: entitySettings.extractOrganizations,
         extract_locations: entitySettings.extractLocations,
         extract_dates: entitySettings.extractDates,
-        topic_tool: modelingSettings.algorithm || "lda",
+        topic_tool: modelingSettings.algorithm || "llm", // Ensure "llm" as fallback
         num_topics: modelingSettings.numTopics,
         iterations: modelingSettings.iterations,
         pass_threshold: modelingSettings.passThreshold,
@@ -512,8 +465,6 @@ export function CampaignSettings({
       console.log("Payload sent to API:", JSON.stringify(payload, null, 2));
       let response;
       if (trendingKeyword.trim()) {
-        console.log("if");
-
         const Trendingpayload = {
           trendingKeyword,
           campaign_id: campaign.id || `campaign-${Date.now()}`,
@@ -522,15 +473,14 @@ export function CampaignSettings({
         };
         response = await getTrendingContent(Trendingpayload);
       } else {
-        console.log("else");
         response = await analyzeTrends(payload);
       }
 
       if (response.status === "success") {
         const campaignDescription =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].text
+            response.posts.length > 0 &&
+            response.posts[0].text
             ? response.posts[0].text
             : description.trim();
 
@@ -545,23 +495,23 @@ export function CampaignSettings({
 
         const campaignTopics =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].topics &&
-          Array.isArray(response.posts[0].topics)
+            response.posts.length > 0 &&
+            response.posts[0].topics &&
+            Array.isArray(response.posts[0].topics)
             ? normalizeTopics(response.posts[0].topics)
-                .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
-                .filter((t) => !["non", "com"].includes(t.toLowerCase()))
+              .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
+              .filter((t) => !["non", "com"].includes(t.toLowerCase()))
             : response.topics &&
               Array.isArray(response.topics) &&
               response.topics.length > 0
-            ? normalizeTopics(response.topics).map(
+              ? normalizeTopics(response.topics).map(
                 (t) => t.charAt(0).toUpperCase() + t.slice(1)
               )
-            : type === "keyword"
-            ? keywords
-            : type === "trending"
-            ? campaign.trendingTopics || []
-            : [];
+              : type === "keyword"
+                ? keywords
+                : type === "trending"
+                  ? campaign.trendingTopics || []
+                  : [];
 
         const newCampaign: Campaign = {
           id: campaign.id || `campaign-${Date.now()}`,
@@ -583,7 +533,6 @@ export function CampaignSettings({
 
         setSettings((prevCampaigns) => {
           if (campaign.id) {
-            console.log("campaign.id");
             return prevCampaigns.map((c) =>
               c.id === campaign.id ? newCampaign : c
             );
@@ -779,7 +728,7 @@ export function CampaignSettings({
 
       <Card>
         <CardHeader>
-          <CardTitle>Advanced Settings aaaa</CardTitle>
+          <CardTitle>Advanced Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="extraction">
@@ -933,7 +882,7 @@ export function CampaignSettings({
                     </button>
                   </div>
                   <Switch
-                    id="include-images"
+                    id="include HawkinsIncludeImages"
                     checked={extractionSettings.includeImages}
                     onCheckedChange={(checked) =>
                       setExtractionSettings({
@@ -1288,6 +1237,7 @@ export function CampaignSettings({
                     <SelectValue placeholder="Select algorithm" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="llm">Large Language Model (LLM)</SelectItem>
                     <SelectItem value="lda">
                       Latent Dirichlet Allocation (LDA)
                     </SelectItem>

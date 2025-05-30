@@ -133,7 +133,7 @@ export function ContentQueue({ queueItems, onClearQueue }: ContentQueueProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Top Keywords</CardTitle>
+              <CardTitle className="text-base">Top Keywords ff</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-3">

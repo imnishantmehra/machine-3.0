@@ -316,9 +316,13 @@ export default function EditCampaignPage() {
     if (!campaignId) return;
     // In a real app, this would be an API call
     const fetchCampaign = async () => {
+      localStorage.removeItem("contentGenPayload");
+      localStorage.removeItem("id")
+
       setIsLoading(true);
       try {
         const editableCampaigns = await getCampaignsById(campaignId);
+        localStorage.setItem("id", campaignId)
 
         if (editableCampaigns.status === "success") {
           const editableCampaignsFound = editableCampaigns.message.raw_data[0];
@@ -717,8 +721,8 @@ export default function EditCampaignPage() {
                 {campaign.type === "keyword"
                   ? "Keywords"
                   : campaign.type === "url"
-                  ? "URLs"
-                  : "Trending"}
+                    ? "URLs"
+                    : "Trending"}
               </span>
             </CardTitle>
           </CardHeader>
@@ -1028,7 +1032,7 @@ export default function EditCampaignPage() {
               <TabsContent value="trending" className="relative z-10 mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Trending Topics</CardTitle>
+                    <CardTitle>Trending Topicsssss</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Tabs
@@ -1036,7 +1040,7 @@ export default function EditCampaignPage() {
                       value={trendingPlatform}
                       onValueChange={setTrendingPlatform}
                     >
-                      <TabsList className="w-full mb-6">
+                      {/* <TabsList className="w-full mb-6">
                         <TabsTrigger value="x" className="flex-1">
                           <Twitter className="w-4 h-4 mr-2" />X
                         </TabsTrigger>
@@ -1052,10 +1056,10 @@ export default function EditCampaignPage() {
                           <Linkedin className="w-4 h-4 mr-2" />
                           LinkedIn
                         </TabsTrigger>
-                      </TabsList>
+                      </TabsList> */}
 
                       <TabsContent value="x">
-                        <TrendingOnX onAddToQueue={handleAddToQueue} />
+                        <TrendingOnX onAddToQueue={handleAddToQueue} trendingContent={trendingTopics} />
                       </TabsContent>
 
                       <TabsContent value="instagram">
@@ -1204,7 +1208,7 @@ export default function EditCampaignPage() {
                               onClick={handleAddTiktokToQueue}
                               disabled={selectedTiktokTopics.length === 0}
                             >
-                              Add Selected to Queue
+                              Add Selected to Queuedfd
                             </Button>
                           </div>
                         </div>
@@ -1281,7 +1285,7 @@ export default function EditCampaignPage() {
                               onClick={handleAddLinkedinToQueue}
                               disabled={selectedLinkedinTopics.length === 0}
                             >
-                              Add Selected to Queue
+                              Add Selected to Queuef
                             </Button>
                           </div>
                         </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,21 +9,28 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 
 interface TrendingOnXProps {
-  onAddToQueue: (items: Array<{ id: string; type: string; name: string; source: string }>) => void
+  trendingContent: { text: string }[];
+  onAddToQueue: (text: string) => void;
 }
 
-export function TrendingOnX({ onAddToQueue }: TrendingOnXProps) {
+export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps) {
+  console.log("trendingContent", trendingContent);
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [trendingTopic, setTrendingTopic] = useState([])
+
+  useEffect(() => {
+    setTrendingTopic(trendingContent)
+  }, [])
 
   // Default trending topics
-  const trendingTopics = [
-    { id: "x-1", name: "#ContentMarketing", engagement: "125K tweets", relevance: 92 },
-    { id: "x-2", name: "#DigitalStrategy", engagement: "87K tweets", relevance: 88 },
-    { id: "x-3", name: "#MarketingAutomation", engagement: "63K tweets", relevance: 76 },
-    { id: "x-4", name: "#BrandAwareness", engagement: "112K tweets", relevance: 85 },
-    { id: "x-5", name: "#SocialMediaROI", engagement: "94K tweets", relevance: 79 },
-  ]
+  // const trendingTopics = [
+  //   { id: "x-1", name: "#ContentMarketing", engagement: "125K tweets", relevance: 92 },
+  //   { id: "x-2", name: "#DigitalStrategy", engagement: "87K tweets", relevance: 88 },
+  //   { id: "x-3", name: "#MarketingAutomation", engagement: "63K tweets", relevance: 76 },
+  //   { id: "x-4", name: "#BrandAwareness", engagement: "112K tweets", relevance: 85 },
+  //   { id: "x-5", name: "#SocialMediaROI", engagement: "94K tweets", relevance: 79 },
+  // ]
 
   const handleSearch = () => {
     // In a real app, this would search for trending topics
@@ -35,20 +42,29 @@ export function TrendingOnX({ onAddToQueue }: TrendingOnXProps) {
   }
 
   const handleAddToQueue = () => {
-    const selectedItems = trendingTopics
-      .filter((topic) => selectedTopics.includes(topic.id))
-      .map((topic) => ({
-        id: topic.id,
-        type: "hashtag",
-        name: topic.name,
-        source: "X Trending",
-      }))
+    // Read existing data or initialize to empty object
+    const data = localStorage.getItem("contentGenPayload") || "{}";
+    const parsed = JSON.parse(data);
 
-    if (selectedItems.length > 0) {
-      onAddToQueue(selectedItems)
-      setSelectedTopics([])
-    }
-  }
+    // Add the trendingTopic key with the selectedTopics array
+    const newData = {
+      ...parsed,
+      trendingTopic: selectedTopics, // Ensure selectedTopics is in scope
+    };
+
+    // Save it back to localStorage
+    localStorage.setItem("contentGenPayload", JSON.stringify(newData));
+  };
+
+  useEffect(() => {
+    const data = localStorage.getItem("contentGenPayload") || "{}";
+    const parsed = JSON.parse(data);
+    const savedTopics: string[] = parsed.trendingTopic || [];
+
+    // Make sure savedTopics is an array of strings (topic.text values)
+    setSelectedTopics(savedTopics);
+  }, []);
+
 
   return (
     <div className="space-y-6">
@@ -75,24 +91,26 @@ export function TrendingOnX({ onAddToQueue }: TrendingOnXProps) {
       <div className="border rounded-lg p-4">
         <h3 className="font-medium mb-4">Trending on X</h3>
         <div className="space-y-4">
-          {trendingTopics.map((topic) => (
-            <div key={topic.id} className="flex items-center justify-between">
+          {trendingTopic.map((topic, index) => (
+            <div key={index} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
                 <Checkbox
-                  id={`x-check-${topic.id}`}
-                  checked={selectedTopics.includes(topic.id)}
-                  onCheckedChange={() => handleCheckboxChange(topic.id)}
+                  id={`x-check-${index}`}
+                  checked={selectedTopics.includes(topic.text)}
+                  onCheckedChange={() => handleCheckboxChange(topic.text)}
                 />
                 <div>
-                  <Label htmlFor={`x-check-${topic.id}`} className="font-medium">
-                    {topic.name}
+                  <Label htmlFor={`x-check-${index}`} className="font-medium">
+                    {topic.text.length > 100 ? topic.text.slice(0, 100) + '...' : topic.text}
                   </Label>
-                  <p className="text-sm text-muted-foreground">{topic.engagement}</p>
+                  <p className="text-sm text-muted-foreground">Tweet snippet</p>
                 </div>
               </div>
-              <Badge variant="secondary">{topic.relevance}% relevant</Badge>
+              <Badge variant="secondary">{Math.floor(Math.random() * 41) + 60}% relevant</Badge>
             </div>
           ))}
+
+
         </div>
       </div>
 

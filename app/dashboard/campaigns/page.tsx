@@ -24,7 +24,7 @@ export default function CampaignsPage() {
   return (
     <Tabs defaultValue="campaigns" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+        <TabsTrigger value="campaigns">Campaignszfsd</TabsTrigger>
         <TabsTrigger value="content-analysis">Content Analysis Workflow</TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>

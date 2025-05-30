@@ -265,8 +265,8 @@ export default function Dashboard() {
     viewParam === "workflow"
       ? "workflow"
       : viewParam === "settings"
-      ? "settings"
-      : "campaigns"
+        ? "settings"
+        : "campaigns"
   );
 
   const [showContentPlanner, setShowContentPlanner] = useState(
@@ -485,8 +485,7 @@ export default function Dashboard() {
   const handleSelectProfile = () => {
     if (checkedProfiles.length === 1) {
       alert(
-        `Profile "${
-          savedProfiles.find((p) => p.id === checkedProfiles[0])?.name
+        `Profile "${savedProfiles.find((p) => p.id === checkedProfiles[0])?.name
         }" selected for use`
       );
       setCheckedProfiles([]);
@@ -515,8 +514,8 @@ export default function Dashboard() {
               tabParam === "content-planner"
                 ? "content-planner"
                 : tabParam === "podcast-tools"
-                ? "podcast-tools"
-                : "content-planner"
+                  ? "podcast-tools"
+                  : "content-planner"
             }
             className="w-full"
           >
@@ -633,9 +632,8 @@ export default function Dashboard() {
                               key={day}
                               value={day}
                               aria-label={day}
-                              className={`px-3 py-2 flex-1 justify-center day-button ${
-                                activeDays.includes(day) ? "active-day" : ""
-                              }`}
+                              className={`px-3 py-2 flex-1 justify-center day-button ${activeDays.includes(day) ? "active-day" : ""
+                                }`}
                             >
                               {day}
                             </ToggleGroupItem>
@@ -658,11 +656,10 @@ export default function Dashboard() {
                                 <ToggleGroupItem
                                   value={platform.name}
                                   aria-label={platform.name}
-                                  className={`p-2 flex-1 justify-center platform-button ${
-                                    activePlatforms.includes(platform.name)
+                                  className={`p-2 flex-1 justify-center platform-button ${activePlatforms.includes(platform.name)
                                       ? "active-platform"
                                       : ""
-                                  }`}
+                                    }`}
                                 >
                                   <platform.icon className="w-6 h-6" />
                                 </ToggleGroupItem>
@@ -757,9 +754,8 @@ export default function Dashboard() {
                                   newMainIdeas[weekIndex] = e.target.value;
                                   setMainIdeas(newMainIdeas);
                                 }}
-                                placeholder={`Main Idea for Week ${
-                                  weekIndex + 1
-                                }`}
+                                placeholder={`Main Idea for Week ${weekIndex + 1
+                                  }`}
                                 className="flex-grow"
                               />
                               <Button

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -25,10 +25,14 @@ import {
   Zap,
   ChevronDown,
   ChevronUp,
+  Link,
+  ChevronLeft,
 } from "lucide-react"
 import type { Campaign } from "./ContentPlannerCampaign"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Header } from "./Header"
+import { getCampaignsById } from "./Service"
 
 interface CampaignResultsProps {
   title: string
@@ -619,64 +623,110 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
   ]
 
   // Extended data for raw results
-  const rawTransformations = [
-    ...sampleTransformations,
-    {
-      original: "Digital marketing requires a comprehensive understanding of consumer behavior.",
-      processed: "digital marketing require comprehensive understand consumer behavior",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Content creation is an essential part of any successful marketing strategy.",
-      processed: "content creation essential part successful marketing strategy",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "The analytics dashboard provides real-time insights into campaign performance.",
-      processed: "analytics dashboard provide real-time insight campaign performance",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Email marketing campaigns have shown a 15% higher conversion rate this quarter.",
-      processed: "email marketing campaign show 15% high conversion rate quarter",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Search engine optimization is crucial for improving website visibility.",
-      processed: "search engine optimization crucial improve website visibility",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "User-generated content helps build trust and authenticity with your audience.",
-      processed: "user-generated content help build trust authenticity audience",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Mobile-friendly websites are essential in today's smartphone-dominated market.",
-      processed: "mobile-friendly website essential today smartphone-dominated market",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Video content is becoming increasingly important for social media engagement.",
-      processed: "video content become increasingly important social media engagement",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Customer feedback should be regularly collected and analyzed for product improvements.",
-      processed: "customer feedback regularly collect analyze product improvement",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "Influencer partnerships can significantly expand your brand's reach and credibility.",
-      processed: "influencer partnership significantly expand brand reach credibility",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-    {
-      original: "The quarterly newsletter will be distributed to all subscribers next week.",
-      processed: "quarterly newsletter distribute subscriber next week",
-      transformations: ["Stopwords Removed", "Lemmatized"],
-    },
-  ]
+  // const rawTransformations = [
+  //   ...sampleTransformations,
+  //   {
+  //     original: "Digital marketing requires a comprehensive understanding of consumer behavior.",
+  //     processed: "digital marketing require comprehensive understand consumer behavior",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Content creation is an essential part of any successful marketing strategy.",
+  //     processed: "content creation essential part successful marketing strategy",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "The analytics dashboard provides real-time insights into campaign performance.",
+  //     processed: "analytics dashboard provide real-time insight campaign performance",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Email marketing campaigns have shown a 15% higher conversion rate this quarter.",
+  //     processed: "email marketing campaign show 15% high conversion rate quarter",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Search engine optimization is crucial for improving website visibility.",
+  //     processed: "search engine optimization crucial improve website visibility",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "User-generated content helps build trust and authenticity with your audience.",
+  //     processed: "user-generated content help build trust authenticity audience",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Mobile-friendly websites are essential in today's smartphone-dominated market.",
+  //     processed: "mobile-friendly website essential today smartphone-dominated market",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Video content is becoming increasingly important for social media engagement.",
+  //     processed: "video content become increasingly important social media engagement",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Customer feedback should be regularly collected and analyzed for product improvements.",
+  //     processed: "customer feedback regularly collect analyze product improvement",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "Influencer partnerships can significantly expand your brand's reach and credibility.",
+  //     processed: "influencer partnership significantly expand brand reach credibility",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  //   {
+  //     original: "The quarterly newsletter will be distributed to all subscribers next week.",
+  //     processed: "quarterly newsletter distribute subscriber next week",
+  //     transformations: ["Stopwords Removed", "Lemmatized"],
+  //   },
+  // ]
+
+  const [rawTransformations, setrawTransformations] = useState([])
+
+  const [isLoading, setIsLoading] = useState(false)
+  useEffect(() => {
+    // In a real app, this would be an API call
+    const fetchCampaign = async () => {
+      setIsLoading(true);
+      const campaignId = localStorage.getItem("id")
+      if (campaignId) {
+        try {
+          const editableCampaigns = await getCampaignsById(campaignId);
+
+          if (editableCampaigns.status === "success") {
+
+          }
+        } catch (err) {
+          console.log("error", err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+    }
+
+    fetchCampaign();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#7A99A8]">
+        <Header />
+        <main className="p-6 max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-4xl font-extrabold text-white">
+              Loading data...
+            </h1>
+          </div>
+          <Card>
+            <CardContent className="p-6 flex justify-center items-center min-h-[400px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -703,15 +753,14 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
                       {item.transformations.map((transform, i) => (
                         <Badge
                           key={i}
-                          className={`${
-                            transform === "Stopwords Removed"
-                              ? "bg-blue-100 text-blue-800"
-                              : transform === "Lemmatized"
-                                ? "bg-green-100 text-green-800"
-                                : transform === "Punctuation Removed"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-purple-100 text-purple-800"
-                          } ${i > 0 ? "ml-1" : ""} hover:bg-opacity-90`}
+                          className={`${transform === "Stopwords Removed"
+                            ? "bg-blue-100 text-blue-800"
+                            : transform === "Lemmatized"
+                              ? "bg-green-100 text-green-800"
+                              : transform === "Punctuation Removed"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-purple-100 text-purple-800"
+                            } ${i > 0 ? "ml-1" : ""} hover:bg-opacity-90`}
                         >
                           {transform}
                         </Badge>
@@ -758,15 +807,14 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
                         {item.transformations.map((transform, i) => (
                           <Badge
                             key={i}
-                            className={`${
-                              transform === "Stopwords Removed"
-                                ? "bg-blue-100 text-blue-800"
-                                : transform === "Lemmatized"
-                                  ? "bg-green-100 text-green-800"
-                                  : transform === "Punctuation Removed"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-purple-100 text-purple-800"
-                            } ${i > 0 ? "ml-1" : ""} hover:bg-opacity-90`}
+                            className={`${transform === "Stopwords Removed"
+                              ? "bg-blue-100 text-blue-800"
+                              : transform === "Lemmatized"
+                                ? "bg-green-100 text-green-800"
+                                : transform === "Punctuation Removed"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-purple-100 text-purple-800"
+                              } ${i > 0 ? "ml-1" : ""} hover:bg-opacity-90`}
                           >
                             {transform}
                           </Badge>
@@ -1321,7 +1369,7 @@ function TopicData({ campaign }: { campaign: Campaign }) {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-2 text-left">Topic</th>
-                <th className="px-4 py-2 text-left">Top Keywords</th>
+                <th className="px-4 py-2 text-left">Top Keywords df</th>
                 <th className="px-4 py-2 text-left">Representative Document</th>
                 <th className="px-4 py-2 text-left">Coherence</th>
                 <th className="px-4 py-2 text-left">Coverage</th>

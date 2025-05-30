@@ -677,7 +677,7 @@ export function ContentPlannerCampaign({
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline truncate"
+                                className="text-blue-600 hover:underline truncate break-words"
                               >
                                 {url}
                               </a>
@@ -813,8 +813,8 @@ export function ContentPlannerCampaign({
                         {campaign.type === "keyword"
                           ? "Keywords"
                           : campaign.type === "url"
-                          ? "URLs"
-                          : "Trending"}
+                            ? "URLs"
+                            : "Trending"}
                       </span>
                     </div>
                     <p className="text-gray-500 mt-1">{campaign.description}</p>
@@ -888,7 +888,7 @@ export function ContentPlannerCampaign({
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
+                              className="text-blue-600 hover:underline break-words"
                             >
                               {url}
                             </a>
