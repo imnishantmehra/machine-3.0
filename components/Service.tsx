@@ -808,6 +808,87 @@ export const generateContent = async ({
   }
 };
 
+// export const generateContentAPI = async () => {
+//   try {
+//     const endpoint = "generate_content";
+
+//     const payloadData = localStorage.getItem("contentGenPayload");
+//     const payloadTextData = localStorage.getItem("text");
+
+//     let parsedPayload = {};
+//     if (payloadData) {
+//       parsedPayload = JSON.parse(payloadData);
+//     }
+
+//     const formParams = new URLSearchParams();
+
+//     formParams.append(
+//       "topics",
+//       parsedPayload.keywords ? parsedPayload.keywords.join(",") : "AI, 2025"
+//     );
+
+//     formParams.append(
+//       "text",
+//       payloadTextData || "usme alag alag component the  isme alag hai"
+//     );
+
+//     if (
+//       Array.isArray(parsedPayload.activePlatforms) &&
+//       parsedPayload.activePlatforms.length > 0
+//     ) {
+//       formParams.append("platforms", parsedPayload.activePlatforms.join(","));
+//     } else {
+//       formParams.append("platforms", "Facebook");
+//     }
+//     if (
+//       Array.isArray(parsedPayload.activeDays) &&
+//       parsedPayload.activeDays.length > 0
+//     ) {
+//       formParams.append("days", parsedPayload.activeDays.join(","));
+//     } else {
+//       formParams.append("days", "Monday");
+//     }
+
+//     formParams.append("author", parsedPayload.author || "");
+
+//     formParams.append(
+//       "sample_text",
+//       payloadTextData || "usme alag alag component the  isme alag hai"
+//     );
+//     const response = await Service(
+//       endpoint,
+//       "POST",
+//       formParams,
+//       undefined,
+//       true
+//     );
+//     console.log("response", response);
+
+//     if (response?.status === "success") {
+//       return {
+//         status: "success",
+//         message: response.generated_content,
+//       };
+//     } else {
+//       console.error("Analyze failed:", response?.message || response?.error);
+//       return {
+//         status: "error",
+//         message:
+//           response?.message || response?.error || "Unexpected analyze response",
+//       };
+//     }
+//   } catch (error) {
+//     console.error("Error during analyze:", error);
+//     return {
+//       status: "error",
+//       message:
+//         error instanceof Error
+//           ? error.message
+//           : "Unexpected error occurred during analysis.",
+//     };
+//   }
+// };
+
 export const generateContentAPI = async () => {
   try {
     const endpoint = "generate_content";
@@ -818,45 +899,89 @@ export const generateContentAPI = async () => {
 
     // Parse JSON data from localStorage
     let parsedPayload = {};
-    if (payloadData) {
-      parsedPayload = JSON.parse(payloadData);
+    if (typeof payloadData === "string") {
+      try {
+        parsedPayload = JSON.parse(payloadData);
+      } catch (e) {
+        console.error("Error parsing contentGenPayload:", e);
+      }
     }
+
+    console.log("Parsed Payload:", parsedPayload); // Debug payload
+    console.log("Text Data:", payloadTextData); // Debug text data
 
     const formParams = new URLSearchParams();
 
-    formParams.append(
-      "topics",
-      parsedPayload.keywords ? parsedPayload.keywords.join(",") : "AI, 2025"
-    );
-
-    formParams.append(
-      "text",
-      payloadTextData || "usme alag alag component the  isme alag hai"
-    );
-
+    // Use trendingTopic if available, else keywords, else fallback
+    let topicsSource;
     if (
+      parsedPayload.trendingTopic &&
+      Array.isArray(parsedPayload.trendingTopic) &&
+      parsedPayload.trendingTopic.length > 0
+    ) {
+      topicsSource = parsedPayload.trendingTopic.join(",");
+    } else if (
+      parsedPayload.keywords &&
+      Array.isArray(parsedPayload.keywords) &&
+      parsedPayload.keywords.length > 0
+    ) {
+      topicsSource = parsedPayload.keywords.join(",");
+    } else {
+      topicsSource = "social media trends"; // Meaningful fallback
+    }
+
+    formParams.append("topics", topicsSource);
+    console.log("Topics Sent:", topicsSource); // Debug topics
+
+    // Use trendingTopic for text if available, else payloadTextData, else fallback
+    let textSource = null; // Initialize to null
+    if (
+      parsedPayload.trendingTopic &&
+      Array.isArray(parsedPayload.trendingTopic) &&
+      parsedPayload.trendingTopic.length > 0
+    ) {
+      textSource = parsedPayload.trendingTopic.join(" "); // Join with spaces for text
+    } else if (payloadTextData && typeof payloadTextData === "string") {
+      try {
+        const parsedText = JSON.parse(payloadTextData);
+        textSource =
+          typeof parsedText === "string" ? parsedText : payloadTextData; // Use parsed text if string, else raw
+      } catch (e) {
+        textSource = payloadTextData; // Use raw string if parsing fails
+        console.warn("Failed to parse payloadTextData, using raw string:", e);
+      }
+    }
+
+    // Apply fallback if textSource is still null or not a string
+    if (!textSource || typeof textSource !== "string") {
+      textSource = "Generate content based on current social media trends."; // Meaningful fallback
+    }
+
+    formParams.append("text", textSource);
+    formParams.append("sample_text", textSource); // Same as text for consistency
+    console.log("Text Sent:", textSource); // Debug text
+
+    // Platforms
+    formParams.append(
+      "platforms",
       Array.isArray(parsedPayload.activePlatforms) &&
-      parsedPayload.activePlatforms.length > 0
-    ) {
-      formParams.append("platforms", parsedPayload.activePlatforms.join(","));
-    } else {
-      formParams.append("platforms", "Facebook");
-    }
-    if (
-      Array.isArray(parsedPayload.activeDays) &&
-      parsedPayload.activeDays.length > 0
-    ) {
-      formParams.append("days", parsedPayload.activeDays.join(","));
-    } else {
-      formParams.append("days", "Monday");
-    }
+        parsedPayload.activePlatforms.length > 0
+        ? parsedPayload.activePlatforms.join(",")
+        : "Facebook"
+    );
 
+    // Days
+    formParams.append(
+      "days",
+      Array.isArray(parsedPayload.activeDays) &&
+        parsedPayload.activeDays.length > 0
+        ? parsedPayload.activeDays.join(",")
+        : "Monday"
+    );
+
+    // Author
     formParams.append("author", parsedPayload.author || "");
 
-    formParams.append(
-      "sample_text",
-      payloadTextData || "usme alag alag component the  isme alag hai"
-    );
     const response = await Service(
       endpoint,
       "POST",
@@ -864,7 +989,7 @@ export const generateContentAPI = async () => {
       undefined,
       true
     );
-    console.log("response", response);
+    console.log("API Response:", response);
 
     if (response?.status === "success") {
       return {
@@ -872,24 +997,28 @@ export const generateContentAPI = async () => {
         message: response.generated_content,
       };
     } else {
-      console.error("Analyze failed:", response?.message || response?.error);
+      console.error(
+        "Content generation failed:",
+        response?.message || response?.error
+      );
       return {
         status: "error",
         message:
-          response?.message || response?.error || "Unexpected analyze response",
+          response?.message || response?.error || "Failed to generate content.",
       };
     }
   } catch (error) {
-    console.error("Error during analyze:", error);
+    console.error("Error during content generation:", error);
     return {
       status: "error",
       message:
         error instanceof Error
           ? error.message
-          : "Unexpected error occurred during analysis.",
+          : "Unexpected error occurred during content generation.",
     };
   }
 };
+
 export const regenerateContentAPI = async ({ id, query, platform }) => {
   try {
     const endpoint = `regenerate_script_machine_content?id=${id}&query=${encodeURIComponent(

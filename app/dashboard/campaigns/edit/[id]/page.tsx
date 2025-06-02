@@ -312,20 +312,69 @@ export default function EditCampaignPage() {
     },
   ];
 
+  // useEffect(() => {
+  //   if (!campaignId) return;
+  //   const fetchCampaign = async () => {
+  //     localStorage.removeItem("contentGenPayload");
+  //     localStorage.removeItem("id")
+
+  //     setIsLoading(true);
+  //     try {
+  //       const editableCampaigns = await getCampaignsById(campaignId);
+  //       localStorage.setItem("id", campaignId)
+
+  //       if (editableCampaigns.status === "success") {
+  //         const editableCampaignsFound = editableCampaigns.message.raw_data[0];
+  //         localStorage.setItem(
+  //           "topics",
+  //           JSON.stringify(editableCampaignsFound.topics)
+  //         );
+  //         localStorage.setItem(
+  //           "text",
+  //           JSON.stringify(editableCampaignsFound.lemmatized_text)
+  //         );
+  //         setCampaign(editableCampaignsFound);
+  //         setCampaignName(editableCampaignsFound.campaign_name);
+  //         setCampaignDescription(editableCampaignsFound.query);
+  //         setCampaignType(editableCampaignsFound.type || "");
+  //         setKeywords(editableCampaigns.message.keywords || []);
+  //         setUrls(editableCampaignsFound.urls || []);
+  //         setTrendingTopics(editableCampaignsFound.trending_content || []);
+  //       } else {
+  //         setError({
+  //           isOpen: true,
+  //           message:
+  //             "Campaign not found. Please try again or create a new campaign.",
+  //         });
+  //       }
+
+  //     } catch (err) {
+  //       setError({
+  //         isOpen: true,
+  //         message: "Failed to load campaign. Please try again later.",
+  //       });
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   fetchCampaign();
+  // }, [campaignId]);
+
   useEffect(() => {
     if (!campaignId) return;
-    // In a real app, this would be an API call
     const fetchCampaign = async () => {
       localStorage.removeItem("contentGenPayload");
-      localStorage.removeItem("id")
+      localStorage.removeItem("id");
 
       setIsLoading(true);
       try {
         const editableCampaigns = await getCampaignsById(campaignId);
-        localStorage.setItem("id", campaignId)
+        localStorage.setItem("id", campaignId);
 
         if (editableCampaigns.status === "success") {
           const editableCampaignsFound = editableCampaigns.message.raw_data[0];
+
           localStorage.setItem(
             "topics",
             JSON.stringify(editableCampaignsFound.topics)
@@ -334,13 +383,25 @@ export default function EditCampaignPage() {
             "text",
             JSON.stringify(editableCampaignsFound.lemmatized_text)
           );
+
           setCampaign(editableCampaignsFound);
           setCampaignName(editableCampaignsFound.campaign_name);
           setCampaignDescription(editableCampaignsFound.query);
-          setCampaignType(editableCampaignsFound.type || "");
-          setKeywords(editableCampaigns.message.keywords || []);
+          // Map "twitter" type to "trending" for UI consistency
+          setCampaignType(
+            editableCampaignsFound.type === "twitter"
+              ? "trending"
+              : editableCampaignsFound.type || "keyword"
+          );
+          setKeywords(editableCampaignsFound.keywords || []);
           setUrls(editableCampaignsFound.urls || []);
-          setTrendingTopics(editableCampaignsFound.trending_content || []);
+
+          // Map trending_content to extract text strings
+          const trendingData = editableCampaignsFound.trending_content || [];
+          const trendingTopicsArray = trendingData
+            .map((item) => item.text)
+            .filter((text) => text && typeof text === "string"); // Ensure valid strings
+          setTrendingTopics(trendingTopicsArray);
         } else {
           setError({
             isOpen: true,
@@ -348,45 +409,6 @@ export default function EditCampaignPage() {
               "Campaign not found. Please try again or create a new campaign.",
           });
         }
-        // if (campaignId === "new-trending-campaign") {
-        //   const newCampaign = {
-        //     id: "new-trending-campaign",
-        //     name: "New Trending Campaign",
-        //     description: "Campaign created from trending topics on X",
-        //     type: "trending" as const,
-        //     trendingTopics: [
-        //       "#DigitalMarketing",
-        //       "Content Strategy",
-        //       "Social Media Analytics",
-        //     ],
-        //     createdAt: new Date(),
-        //     updatedAt: new Date(),
-        //   };
-        //   setCampaign(newCampaign);
-        //   setCampaignName(newCampaign.name);
-        //   setCampaignDescription(newCampaign.description);
-        //   setCampaignType(newCampaign.type);
-        //   setTrendingTopics(newCampaign.trendingTopics || []);
-        // } else {
-        //   const foundCampaign = SAMPLE_CAMPAIGNS.find(
-        //     (c) => c.id === campaignId
-        //   );
-        //   if (foundCampaign) {
-        //     setCampaign(foundCampaign);
-        //     setCampaignName(foundCampaign.name);
-        //     setCampaignDescription(foundCampaign.description);
-        //     setCampaignType(foundCampaign.type);
-        //     setKeywords(foundCampaign.keywords || []);
-        //     setUrls(foundCampaign.urls || []);
-        //     setTrendingTopics(foundCampaign.trendingTopics || []);
-        //   } else {
-        //     setError({
-        //       isOpen: true,
-        //       message:
-        //         "Campaign not found. Please try again or create a new campaign.",
-        //     });
-        //   }
-        // }
       } catch (err) {
         setError({
           isOpen: true,
@@ -400,13 +422,15 @@ export default function EditCampaignPage() {
     fetchCampaign();
   }, [campaignId]);
 
+  // Add debugging for trendingTopics state changes
+  useEffect(() => {}, [trendingTopics]);
+
   const handleSaveCampaign = () => {
     if (!campaign) return;
 
     setIsSaving(true);
 
-    // Prepare the updated campaign data
-    const updatedCampaign: Partial<Campaign> = {
+    const updatedCampaign = {
       name: campaignName,
       description: campaignDescription,
       type: campaignType,
@@ -424,19 +448,30 @@ export default function EditCampaignPage() {
       updatedCampaign.keywords = undefined;
       updatedCampaign.urls = undefined;
       updatedCampaign.trendingTopics = trendingTopics;
+
+      // Save trendingTopics to localStorage
+      const existingPayload = localStorage.getItem("contentGenPayload") || "{}";
+      let parsedPayload = {};
+      try {
+        parsedPayload = JSON.parse(existingPayload);
+      } catch (e) {
+        console.error("Failed to parse contentGenPayload:", e);
+      }
+      const updatedPayload = {
+        ...parsedPayload,
+        trendingTopic: trendingTopics,
+      };
+      localStorage.setItem("contentGenPayload", JSON.stringify(updatedPayload));
+      console.log("Saved trendingTopics to localStorage:", updatedPayload);
     }
 
-    // In a real app, this would be an API call
     setTimeout(() => {
       try {
-        // Update the local state
         setCampaign({
           ...campaign,
           ...updatedCampaign,
           updatedAt: new Date(),
         });
-
-        // Show success message or redirect
         router.push("/dashboard?tab=content-planner&view=campaigns");
       } catch (err) {
         setError({
@@ -721,8 +756,8 @@ export default function EditCampaignPage() {
                 {campaign.type === "keyword"
                   ? "Keywords"
                   : campaign.type === "url"
-                    ? "URLs"
-                    : "Trending"}
+                  ? "URLs"
+                  : "Trending"}
               </span>
             </CardTitle>
           </CardHeader>
@@ -1059,7 +1094,10 @@ export default function EditCampaignPage() {
                       </TabsList> */}
 
                       <TabsContent value="x">
-                        <TrendingOnX onAddToQueue={handleAddToQueue} trendingContent={trendingTopics} />
+                        <TrendingOnX
+                          onAddToQueue={handleAddToQueue}
+                          trendingContent={trendingTopics}
+                        />
                       </TabsContent>
 
                       <TabsContent value="instagram">

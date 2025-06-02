@@ -1,70 +1,92 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Search, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface TrendingOnXProps {
-  trendingContent: { text: string }[];
-  onAddToQueue: (text: string) => void;
+  trendingContent: string[]; // Array of strings (tweets)
+  onAddToQueue: (
+    items: Array<{ id: string; type: string; name: string; source: string }>
+  ) => void;
 }
 
-export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
-  const [trendingTopic, setTrendingTopic] = useState([])
-
-  // useEffect(() => {
-  //   setTrendingTopic(trendingContent)
-  // }, [])
-
-  // Default trending topics
-  // const trendingTopics = [
-  //   { id: "x-1", name: "#ContentMarketing", engagement: "125K tweets", relevance: 92 },
-  //   { id: "x-2", name: "#DigitalStrategy", engagement: "87K tweets", relevance: 88 },
-  //   { id: "x-3", name: "#MarketingAutomation", engagement: "63K tweets", relevance: 76 },
-  //   { id: "x-4", name: "#BrandAwareness", engagement: "112K tweets", relevance: 85 },
-  //   { id: "x-5", name: "#SocialMediaROI", engagement: "94K tweets", relevance: 79 },
-  // ]
+export function TrendingOnX({
+  trendingContent,
+  onAddToQueue,
+}: TrendingOnXProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const handleSearch = () => {
-    // In a real app, this would search for trending topics
-    console.log("Searching for:", searchQuery)
-  }
-
-  const handleCheckboxChange = (topicId: string) => {
-    setSelectedTopics((prev) => (prev.includes(topicId) ? prev.filter((id) => id !== topicId) : [...prev, topicId]))
-  }
-
-  const handleAddToQueue = () => {
-    return
-    // Read existing data or initialize to empty object
-    // const data = localStorage.getItem("contentGenPayload") || "{}";
-    // const parsed = JSON.parse(data);
-
-    // // Add the trendingTopic key with the selectedTopics array
-    // const newData = {
-    //   ...parsed,
-    //   trendingTopic: selectedTopics, // Ensure selectedTopics is in scope
-    // };
-
-    // // Save it back to localStorage
-    // localStorage.setItem("contentGenPayload", JSON.stringify(newData));
+    console.log("Searching for:", searchQuery);
+    // In a real app, this could filter trendingContent or trigger an API call
   };
 
-  // useEffect(() => {
-  //   const data = localStorage.getItem("contentGenPayload") || "{}";
-  //   const parsed = JSON.parse(data);
-  //   const savedTopics: string[] = parsed.trendingTopic || [];
+  const handleRemoveTopic = (index: number) => {
+    // Remove topic from selectedTopics if present
+    const topic = trendingContent[index];
+    setSelectedTopics((prev) => prev.filter((t) => t !== topic));
+  };
 
-  //   // Make sure savedTopics is an array of strings (topic.text values)
-  //   setSelectedTopics(savedTopics);
-  // }, []);
+  // const handleAddToQueue = () => {
+  //   if (selectedTopics.length === 0) return;
 
+  //   const queueItems = selectedTopics.map((topic, index) => ({
+  //     id: `trending-x-${index}-${Date.now()}`,
+  //     type: "tweet",
+  //     name: topic,
+  //     source: "X Trending",
+  //   }));
+
+  //   onAddToQueue(queueItems);
+  //   setSelectedTopics([]);
+  // };
+
+  const handleAddToQueue = () => {
+    if (selectedTopics.length === 0) return;
+
+    // Update localStorage
+    const existingPayload = localStorage.getItem("contentGenPayload") || "{}";
+    let parsedPayload = {};
+    try {
+      parsedPayload = JSON.parse(existingPayload);
+    } catch (e) {
+      console.error("Failed to parse contentGenPayload:", e);
+    }
+
+    const updatedPayload = {
+      ...parsedPayload,
+      trendingTopic: selectedTopics,
+    };
+    localStorage.setItem("contentGenPayload", JSON.stringify(updatedPayload));
+    console.log("Saved to localStorage:", updatedPayload);
+
+    const queueItems = selectedTopics.map((topic, index) => ({
+      id: `trending-x-${index}-${Date.now()}`,
+      type: "tweet",
+      name: topic,
+      source: "X Trending",
+    }));
+
+    onAddToQueue(queueItems);
+    setSelectedTopics([]);
+  };
+
+  const handleToggleTopic = (topic: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+    );
+  };
+
+  // Filter trendingContent based on searchQuery (optional)
+  const filteredTopics = searchQuery
+    ? trendingContent.filter((topic) =>
+        topic.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : trendingContent;
 
   return (
     <div className="space-y-6">
@@ -79,8 +101,8 @@ export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps)
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                e.preventDefault()
-                handleSearch()
+                e.preventDefault();
+                handleSearch();
               }
             }}
           />
@@ -88,37 +110,53 @@ export function TrendingOnX({ trendingContent, onAddToQueue }: TrendingOnXProps)
         <Button onClick={handleSearch}>Search</Button>
       </div>
 
-      <div className="border rounded-lg p-4">
-        <h3 className="font-medium mb-4">Trending on X</h3>
-        <div className="space-y-4">
-          {trendingTopic.map((topic, index) => (
-            <div key={index} className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id={`x-check-${index}`}
-                  checked={selectedTopics.includes(topic.text)}
-                  onCheckedChange={() => handleCheckboxChange(topic.text)}
-                />
-                <div>
-                  <Label htmlFor={`x-check-${index}`} className="font-medium">
-                    {topic.text.length > 100 ? topic.text.slice(0, 100) + '...' : topic.text}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">Tweet snippet</p>
-                </div>
+      <div className="border rounded-md p-4">
+        <Label className="mb-2 block">Twitter Trending Posts:</Label>
+        {filteredTopics.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {filteredTopics.map((topic, index) => (
+              <div
+                key={index}
+                className={`flex items-center px-3 py-1 rounded-full max-w-lg ${
+                  selectedTopics.includes(topic)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground"
+                }`}
+                onClick={() => handleToggleTopic(topic)} // Toggle selection on click
+                style={{ cursor: "pointer" }}
+              >
+                <span className="truncate" title={topic}>
+                  {topic.length > 50 ? topic.slice(0, 50) + "..." : topic}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-1 ml-1"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering toggle
+                    handleRemoveTopic(index);
+                  }}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
               </div>
-              <Badge variant="secondary">{Math.floor(Math.random() * 41) + 60}% relevant</Badge>
-            </div>
-          ))}
-
-
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No trending posts available. Try adjusting your search.
+          </p>
+        )}
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleAddToQueue} disabled={selectedTopics.length === 0}>
+        <Button
+          onClick={handleAddToQueue}
+          disabled={selectedTopics.length === 0}
+        >
           Add Selected to Queue
         </Button>
       </div>
     </div>
-  )
+  );
 }
