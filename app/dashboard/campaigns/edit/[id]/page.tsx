@@ -42,7 +42,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { getCampaignsById } from "@/components/Service";
 
-// Sample campaigns data - in a real app, this would come from an API or database
 const SAMPLE_CAMPAIGNS: Campaign[] = [
   {
     id: "campaign-1",
@@ -183,12 +182,10 @@ export default function EditCampaignPage() {
     },
   ]);
 
-  // Search state for each platform
   const [instagramSearch, setInstagramSearch] = useState("");
   const [tiktokSearch, setTiktokSearch] = useState("");
   const [linkedinSearch, setLinkedinSearch] = useState("");
 
-  // Selected topics for each platform
   const [selectedInstagramTopics, setSelectedInstagramTopics] = useState<
     string[]
   >([]);
@@ -199,7 +196,6 @@ export default function EditCampaignPage() {
     string[]
   >([]);
 
-  // Campaign form state
   const [campaignName, setCampaignName] = useState("");
   const [campaignDescription, setCampaignDescription] = useState("");
   const [campaignType, setCampaignType] = useState<
@@ -212,7 +208,6 @@ export default function EditCampaignPage() {
   const [trendingKeyword, setTrendingKeyword] = useState("");
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
 
-  // Sample trending topics for each platform
   const instagramTrendingTopics = [
     {
       id: "ig-1",
@@ -312,55 +307,6 @@ export default function EditCampaignPage() {
     },
   ];
 
-  // useEffect(() => {
-  //   if (!campaignId) return;
-  //   const fetchCampaign = async () => {
-  //     localStorage.removeItem("contentGenPayload");
-  //     localStorage.removeItem("id")
-
-  //     setIsLoading(true);
-  //     try {
-  //       const editableCampaigns = await getCampaignsById(campaignId);
-  //       localStorage.setItem("id", campaignId)
-
-  //       if (editableCampaigns.status === "success") {
-  //         const editableCampaignsFound = editableCampaigns.message.raw_data[0];
-  //         localStorage.setItem(
-  //           "topics",
-  //           JSON.stringify(editableCampaignsFound.topics)
-  //         );
-  //         localStorage.setItem(
-  //           "text",
-  //           JSON.stringify(editableCampaignsFound.lemmatized_text)
-  //         );
-  //         setCampaign(editableCampaignsFound);
-  //         setCampaignName(editableCampaignsFound.campaign_name);
-  //         setCampaignDescription(editableCampaignsFound.query);
-  //         setCampaignType(editableCampaignsFound.type || "");
-  //         setKeywords(editableCampaigns.message.keywords || []);
-  //         setUrls(editableCampaignsFound.urls || []);
-  //         setTrendingTopics(editableCampaignsFound.trending_content || []);
-  //       } else {
-  //         setError({
-  //           isOpen: true,
-  //           message:
-  //             "Campaign not found. Please try again or create a new campaign.",
-  //         });
-  //       }
-
-  //     } catch (err) {
-  //       setError({
-  //         isOpen: true,
-  //         message: "Failed to load campaign. Please try again later.",
-  //       });
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchCampaign();
-  // }, [campaignId]);
-
   useEffect(() => {
     if (!campaignId) return;
     const fetchCampaign = async () => {
@@ -387,7 +333,6 @@ export default function EditCampaignPage() {
           setCampaign(editableCampaignsFound);
           setCampaignName(editableCampaignsFound.campaign_name);
           setCampaignDescription(editableCampaignsFound.query);
-          // Map "twitter" type to "trending" for UI consistency
           setCampaignType(
             editableCampaignsFound.type === "twitter"
               ? "trending"
@@ -396,11 +341,10 @@ export default function EditCampaignPage() {
           setKeywords(editableCampaignsFound.keywords || []);
           setUrls(editableCampaignsFound.urls || []);
 
-          // Map trending_content to extract text strings
           const trendingData = editableCampaignsFound.trending_content || [];
           const trendingTopicsArray = trendingData
             .map((item) => item.text)
-            .filter((text) => text && typeof text === "string"); // Ensure valid strings
+            .filter((text) => text && typeof text === "string");
           setTrendingTopics(trendingTopicsArray);
         } else {
           setError({
@@ -422,7 +366,6 @@ export default function EditCampaignPage() {
     fetchCampaign();
   }, [campaignId]);
 
-  // Add debugging for trendingTopics state changes
   useEffect(() => {}, [trendingTopics]);
 
   const handleSaveCampaign = () => {
@@ -449,7 +392,6 @@ export default function EditCampaignPage() {
       updatedCampaign.urls = undefined;
       updatedCampaign.trendingTopics = trendingTopics;
 
-      // Save trendingTopics to localStorage
       const existingPayload = localStorage.getItem("contentGenPayload") || "{}";
       let parsedPayload = {};
       try {
@@ -492,13 +434,11 @@ export default function EditCampaignPage() {
     items: Array<{ id: string; type: string; name: string; source: string }>
   ) => {
     setQueueItems((prev) => {
-      // Filter out duplicates
       const newItems = items.filter(
         (item) => !prev.some((prevItem) => prevItem.id === item.id)
       );
       return [...prev, ...newItems];
     });
-    // Switch to the content queue tab
     setActiveTab("content-queue");
   };
 
@@ -520,16 +460,13 @@ export default function EditCampaignPage() {
   const handleAddUrl = () => {
     if (urlInput.trim()) {
       try {
-        // Add protocol if missing
         let urlToAdd = urlInput.trim();
         if (!/^https?:\/\//i.test(urlToAdd)) {
           urlToAdd = "https://" + urlToAdd;
         }
 
-        // Validate URL
         new URL(urlToAdd);
 
-        // If validation passes, add the URL
         setUrls((PrevUrls) => [...PrevUrls, urlToAdd]);
         setUrlInput("");
       } catch (e) {
@@ -557,7 +494,6 @@ export default function EditCampaignPage() {
     setTrendingTopics(trendingTopics.filter((_, i) => i !== index));
   };
 
-  // Handle checkbox changes for each platform
   const handleInstagramCheckboxChange = (topicId: string) => {
     setSelectedInstagramTopics((prev) =>
       prev.includes(topicId)
@@ -582,7 +518,6 @@ export default function EditCampaignPage() {
     );
   };
 
-  // Handle adding selected topics to queue for each platform
   const handleAddInstagramToQueue = () => {
     const selectedItems = instagramTrendingTopics
       .filter((topic) => selectedInstagramTopics.includes(topic.id))
@@ -631,20 +566,16 @@ export default function EditCampaignPage() {
     }
   };
 
-  // Handle search for each platform
   const handleInstagramSearch = () => {
     console.log("Searching Instagram for:", instagramSearch);
-    // In a real app, this would search for trending topics on Instagram
   };
 
   const handleTiktokSearch = () => {
     console.log("Searching TikTok for:", tiktokSearch);
-    // In a real app, this would search for trending topics on TikTok
   };
 
   const handleLinkedinSearch = () => {
     console.log("Searching LinkedIn for:", linkedinSearch);
-    // In a real app, this would search for trending topics on LinkedIn
   };
 
   if (isLoading) {
