@@ -60,7 +60,6 @@ export function ContentCreationFlow({
   );
   const [regeneratingImage, setRegeneratingImage] = useState(null);
 
-  // State to store contentGenPayload from localStorage
   const [contentGenPayload, setContentGenPayload] = useState(() => {
     const stored = localStorage.getItem("contentGenPayload");
     return stored ? JSON.parse(stored) : {};
@@ -175,29 +174,12 @@ export function ContentCreationFlow({
 
   const [activeDays, setActiveDays] = useState<string[]>(() => {
     const payload = getContentGenPayload();
-    return (
-      payload.activeDays || [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ]
-    );
+    return payload.activeDays || ["Monday"];
   });
 
   const [activePlatforms, setActivePlatforms] = useState<string[]>(() => {
     const payload = getContentGenPayload();
-    return (
-      payload.activePlatforms || [
-        "Instagram",
-        "Facebook",
-        "Twitter",
-        "LinkedIn",
-      ]
-    );
+    return payload.activePlatforms || ["Twitter"];
   });
 
   const updateContentGenPayload = (updates: Partial<any>) => {
@@ -207,7 +189,6 @@ export function ContentCreationFlow({
     setContentGenPayload(updated);
   };
 
-  // Effect to monitor changes to contentGenPayload in localStorage
   useEffect(() => {
     const handleStorageChange = () => {
       const stored = localStorage.getItem("contentGenPayload");

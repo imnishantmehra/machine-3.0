@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface TrendingOnXProps {
-  trendingContent: string[]; // Array of strings (tweets)
+  trendingContent: string[];
   onAddToQueue: (
     items: Array<{ id: string; type: string; name: string; source: string }>
   ) => void;
@@ -22,33 +22,16 @@ export function TrendingOnX({
 
   const handleSearch = () => {
     console.log("Searching for:", searchQuery);
-    // In a real app, this could filter trendingContent or trigger an API call
   };
 
   const handleRemoveTopic = (index: number) => {
-    // Remove topic from selectedTopics if present
     const topic = trendingContent[index];
     setSelectedTopics((prev) => prev.filter((t) => t !== topic));
   };
 
-  // const handleAddToQueue = () => {
-  //   if (selectedTopics.length === 0) return;
-
-  //   const queueItems = selectedTopics.map((topic, index) => ({
-  //     id: `trending-x-${index}-${Date.now()}`,
-  //     type: "tweet",
-  //     name: topic,
-  //     source: "X Trending",
-  //   }));
-
-  //   onAddToQueue(queueItems);
-  //   setSelectedTopics([]);
-  // };
-
   const handleAddToQueue = () => {
     if (selectedTopics.length === 0) return;
 
-    // Update localStorage
     const existingPayload = localStorage.getItem("contentGenPayload") || "{}";
     let parsedPayload = {};
     try {
@@ -81,7 +64,6 @@ export function TrendingOnX({
     );
   };
 
-  // Filter trendingContent based on searchQuery (optional)
   const filteredTopics = searchQuery
     ? trendingContent.filter((topic) =>
         topic.toLowerCase().includes(searchQuery.toLowerCase())
