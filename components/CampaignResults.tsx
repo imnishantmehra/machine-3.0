@@ -693,9 +693,35 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
       if (campaignId) {
         try {
           const editableCampaigns = await getCampaignsById(campaignId);
+          console.log(editableCampaigns)
 
           if (editableCampaigns.status === "success") {
+            const otherDetails = {
+              organizations: editableCampaigns.message.raw_data[0].organizations || [],
+              locations: editableCampaigns.message.raw_data[0].locations || [],
+              persons: editableCampaigns.message.raw_data[0].persons || [],
+              dates: editableCampaigns.message.raw_data[0].dates || []
+            }
 
+            localStorage.setItem("otherDetails", JSON.stringify(otherDetails));
+
+            const newData = [{
+              original: editableCampaigns.message.raw_data[0].text || "",
+              processed: editableCampaigns.message.raw_data[0].lemmatized_text || "",
+              transformations: ["Lemmatized"],
+            },
+            {
+              original: editableCampaigns.message.raw_data[0].text || "",
+              processed: editableCampaigns.message.raw_data[0].stemmed_text || "",
+              transformations: ["stemmed_text"],
+            },
+            {
+              original: editableCampaigns.message.raw_data[0].text || "",
+              processed: editableCampaigns.message.raw_data[0].stopwords_removed_text || "",
+              transformations: ["stopwords_removed_text"],
+            }]
+
+            setrawTransformations(newData)
           }
         } catch (err) {
           console.log("error", err);
@@ -745,7 +771,7 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {sampleTransformations.map((item, index) => (
+                {rawTransformations?.map((item, index) => (
                   <tr key={index}>
                     <td className="px-4 py-3">{item.original}</td>
                     <td className="px-4 py-3">{item.processed}</td>
@@ -834,6 +860,14 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
 
 // Entity Recognition Results Components
 function EntityOverview({ campaign }: { campaign: Campaign }) {
+  const rawData = localStorage.getItem("otherDetails")
+
+  if (!rawData) {
+    return null // safer fallback than just `return`
+  }
+
+  const data = JSON.parse(rawData)
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
@@ -842,7 +876,7 @@ function EntityOverview({ campaign }: { campaign: Campaign }) {
             <User className="w-6 h-6 text-blue-600" />
           </div>
           <h4 className="font-medium">Persons</h4>
-          <p className="text-3xl font-bold mt-1 mb-1">24</p>
+          <p className="text-3xl font-bold mt-1 mb-1">{data.persons?.length || 0}</p>
           <p className="text-sm text-gray-500">Identified individuals</p>
         </CardContent>
       </Card>
@@ -853,7 +887,7 @@ function EntityOverview({ campaign }: { campaign: Campaign }) {
             <Building className="w-6 h-6 text-green-600" />
           </div>
           <h4 className="font-medium">Organizations</h4>
-          <p className="text-3xl font-bold mt-1 mb-1">38</p>
+          <p className="text-3xl font-bold mt-1 mb-1">{data.organizations?.length || 0}</p>
           <p className="text-sm text-gray-500">Companies and groups</p>
         </CardContent>
       </Card>
@@ -864,7 +898,7 @@ function EntityOverview({ campaign }: { campaign: Campaign }) {
             <MapPin className="w-6 h-6 text-purple-600" />
           </div>
           <h4 className="font-medium">Locations</h4>
-          <p className="text-3xl font-bold mt-1 mb-1">16</p>
+          <p className="text-3xl font-bold mt-1 mb-1">{data.locations?.length || 0}</p>
           <p className="text-sm text-gray-500">Geographic references</p>
         </CardContent>
       </Card>
@@ -875,7 +909,7 @@ function EntityOverview({ campaign }: { campaign: Campaign }) {
             <Calendar className="w-6 h-6 text-yellow-600" />
           </div>
           <h4 className="font-medium">Dates</h4>
-          <p className="text-3xl font-bold mt-1 mb-1">42</p>
+          <p className="text-3xl font-bold mt-1 mb-1">{data.dates?.length || 0}</p>
           <p className="text-sm text-gray-500">Temporal references</p>
         </CardContent>
       </Card>
@@ -1051,6 +1085,15 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
 }
 
 function EntityData({ campaign }: { campaign: Campaign }) {
+
+  const rawData = localStorage.getItem("otherDetails")
+
+  if (!rawData) {
+    return null // safer fallback than just `return`
+  }
+
+  const data = JSON.parse(rawData);
+
   return (
     <Card>
       <CardHeader>
@@ -1063,55 +1106,56 @@ function EntityData({ campaign }: { campaign: Campaign }) {
               <tr>
                 <th className="px-4 py-2 text-left">Entity</th>
                 <th className="px-4 py-2 text-left">Type</th>
-                <th className="px-4 py-2 text-left">Context</th>
+                {/* <th className="px-4 py-2 text-left">Context</th>
                 <th className="px-4 py-2 text-left">Confidence</th>
-                <th className="px-4 py-2 text-left">Occurrences</th>
+                <th className="px-4 py-2 text-left">Occurrences</th> */}
               </tr>
             </thead>
             <tbody className="divide-y">
               <tr>
-                <td className="px-4 py-3 font-medium">John Smith</td>
+                <td className="px-4 py-3 font-medium">{data.persons?.join(', ') || "No data available"}
+                </td>
                 <td className="px-4 py-3">
                   <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Person</Badge>
                 </td>
-                <td className="px-4 py-3 max-w-xs truncate">
+                {/* <td className="px-4 py-3 max-w-xs truncate">
                   ...our CEO John Smith discussed the future of marketing...
                 </td>
                 <td className="px-4 py-3">98%</td>
-                <td className="px-4 py-3">5</td>
+                <td className="px-4 py-3">5</td> */}
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium">Acme Corporation</td>
+                <td className="px-4 py-3 font-medium">{data.organizations?.join(', ') || "No data available"}</td>
                 <td className="px-4 py-3">
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Organization</Badge>
                 </td>
-                <td className="px-4 py-3 max-w-xs truncate">
+                {/* <td className="px-4 py-3 max-w-xs truncate">
                   ...partnership with Acme Corporation has led to significant growth...
                 </td>
                 <td className="px-4 py-3">95%</td>
-                <td className="px-4 py-3">12</td>
+                <td className="px-4 py-3">12</td> */}
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium">San Francisco</td>
+                <td className="px-4 py-3 font-medium">{data.locations?.join(', ') || "No data available"}</td>
                 <td className="px-4 py-3">
                   <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Location</Badge>
                 </td>
-                <td className="px-4 py-3 max-w-xs truncate">
+                {/* <td className="px-4 py-3 max-w-xs truncate">
                   ...our headquarters in San Francisco hosts regular industry events...
                 </td>
                 <td className="px-4 py-3">99%</td>
-                <td className="px-4 py-3">7</td>
+                <td className="px-4 py-3">7</td> */}
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium">Q1 2025</td>
+                <td className="px-4 py-3 font-medium">{data.dates?.join(', ') || "No data available"}</td>
                 <td className="px-4 py-3">
                   <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Date</Badge>
                 </td>
-                <td className="px-4 py-3 max-w-xs truncate">...planning to launch the new platform in Q1 2025...</td>
+                {/* <td className="px-4 py-3 max-w-xs truncate">...planning to launch the new platform in Q1 2025...</td>
                 <td className="px-4 py-3">97%</td>
-                <td className="px-4 py-3">9</td>
+                <td className="px-4 py-3">9</td> */}
               </tr>
-              <tr>
+              {/* <tr>
                 <td className="px-4 py-3 font-medium">Sarah Johnson</td>
                 <td className="px-4 py-3">
                   <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Person</Badge>
@@ -1121,7 +1165,8 @@ function EntityData({ campaign }: { campaign: Campaign }) {
                 </td>
                 <td className="px-4 py-3">96%</td>
                 <td className="px-4 py-3">4</td>
-              </tr>
+              </tr> */
+              }
             </tbody>
           </table>
         </div>
