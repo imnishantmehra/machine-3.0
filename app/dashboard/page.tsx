@@ -46,18 +46,15 @@ import {
   ContentPlannerCampaign,
   type Campaign,
 } from "@/components/ContentPlannerCampaign";
-// Add the import for ContentAnalysisWorkflow at the top with the other imports
 import { ContentAnalysisWorkflow } from "@/components/ContentAnalysisWorkflow";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// Add URL query parameter handling
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getAllCampaigns } from "@/components/Service";
 import { toast } from "sonner";
 
-// Sample author profiles for demonstration
 const SAMPLE_AUTHOR_PROFILES = [
   {
     id: "1",
@@ -86,7 +83,6 @@ const SAMPLE_AUTHOR_PROFILES = [
   },
 ];
 
-// Sample podcast shows data
 const podcastShows = [
   {
     id: "podcast-1",
@@ -143,84 +139,6 @@ const PLATFORMS = [
   { name: "TikTok", icon: Music },
 ];
 
-// Sample campaigns data
-// const SAMPLE_CAMPAIGNS: Campaign[] = [
-// {
-//   id: "campaign-1",
-//   name: "Q1 Marketing Strategy",
-//   description: "Content strategy for Q1 product launches and promotions",
-//   type: "keyword",
-//   keywords: [
-//     "product launch",
-//     "spring promotion",
-//     "new features",
-//     "customer testimonials",
-//   ],
-//   urls: [
-//     "https://competitor1.com/blog",
-//     "https://competitor2.com/products",
-//     "https://competitor3.com/features",
-//   ],
-//   createdAt: new Date("2025-01-15"),
-//   updatedAt: new Date("2025-01-20"),
-// },
-// {
-//   id: "campaign-2",
-//   name: "Competitor Analysis",
-//   description: "Analysis of competitor content and positioning",
-//   type: "url",
-//   urls: [
-//     "https://competitor1.com/blog",
-//     "https://competitor2.com/products",
-//     "https://competitor3.com/features",
-//   ],
-//   createdAt: new Date("2025-02-01"),
-//   updatedAt: new Date("2025-02-10"),
-// },
-// {
-//   id: "campaign-3",
-//   name: "Industry Trends 2025",
-//   description: "Research on emerging industry trends for content planning",
-//   type: "keyword",
-//   keywords: [
-//     "industry trends",
-//     "future technology",
-//     "market predictions",
-//     "innovation",
-//   ],
-//   createdAt: new Date("2025-02-15"),
-//   updatedAt: new Date("2025-02-18"),
-// },
-// {
-//   id: "campaign-4",
-//   name: "Customer Success Stories",
-//   description:
-//     "Collection of customer success stories for content repurposing",
-//   type: "url",
-//   urls: [
-//     "https://ourwebsite.com/case-studies/customer1",
-//     "https://ourwebsite.com/case-studies/customer2",
-//     "https://ourwebsite.com/testimonials",
-//   ],
-//   createdAt: new Date("2025-03-01"),
-//   updatedAt: new Date("2025-03-05"),
-// },
-// {
-//   id: "campaign-5",
-//   name: "X Trends Analysis",
-//   description: "Analysis of trending topics on X for content strategy",
-//   type: "trending",
-//   trendingTopics: [
-//     "AI ethics",
-//     "sustainable tech",
-//     "remote work culture",
-//     "digital wellness",
-//   ],
-//   createdAt: new Date("2025-03-10"),
-//   updatedAt: new Date("2025-03-10"),
-// },
-// ];
-
 export default function Dashboard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [numberOfWeeks, setNumberOfWeeks] = useState("1");
@@ -247,8 +165,7 @@ export default function Dashboard() {
   const stepTwoRef = useRef<HTMLDivElement>(null);
   const stepThreeRef = useRef<HTMLDivElement>(null);
 
-  // const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
-  const [campaigns, setCampaigns] = useState<Campaign[]>();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
@@ -273,14 +190,44 @@ export default function Dashboard() {
     tabParam === "content-planner"
   );
 
+  // Fetch campaigns on component mount and sort by createdAt (newest first)
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const response = await getAllCampaigns();
+        if (response.status === "success") {
+          const fetchedCampaigns = response.message.campaigns || [];
+          // Sort campaigns by createdAt in descending order (newest first)
+          fetchedCampaigns.sort(
+            (a: Campaign, b: Campaign) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setCampaigns(fetchedCampaigns);
+        } else {
+          console.error("Failed to fetch campaigns:", response.message);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load campaigns. Please try again.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred while loading campaigns.",
+        });
+      }
+    };
+    fetchCampaigns();
+  }, []);
+
   const handleUpdateActiveDays = (days: string[]) => {
     setActiveDays(days);
   };
 
-  useEffect(() => {}, [activeDays]);
-
   const handleUpdateActivePlatforms = (platforms: string[]) => {
-    console.log("sf");
     setActivePlatforms(platforms);
   };
 
@@ -430,22 +377,35 @@ export default function Dashboard() {
       updatedAt: new Date(),
     };
 
-    setCampaigns((prev) => [...(prev ?? []), newCampaign]); // ✅ Safe spreading
+    setCampaigns((prev) => {
+      const updatedCampaigns = [...prev, newCampaign];
+      // Sort campaigns by createdAt in descending order (newest first)
+      updatedCampaigns.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      return updatedCampaigns;
+    });
     setSelectedCampaign(newCampaign);
-    setContentPlannerTab("workflow");
   };
 
   const handleEditCampaign = (
     id: string,
     updatedCampaign: Partial<Campaign>
   ) => {
-    setCampaigns(
-      campaigns?.map((campaign) =>
+    setCampaigns((prev) => {
+      const updatedCampaigns = prev.map((campaign) =>
         campaign.id === id
           ? { ...campaign, ...updatedCampaign, updatedAt: new Date() }
           : campaign
-      )
-    );
+      );
+      // Sort campaigns by createdAt in descending order (newest first)
+      updatedCampaigns.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      return updatedCampaigns;
+    });
 
     if (selectedCampaign?.id === id) {
       setSelectedCampaign((prev) =>
@@ -455,7 +415,15 @@ export default function Dashboard() {
   };
 
   const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns?.filter((campaign) => campaign.id !== id));
+    setCampaigns((prev) => {
+      const updatedCampaigns = prev.filter((campaign) => campaign.id !== id);
+      // Sort campaigns by createdAt in descending order (newest first)
+      updatedCampaigns.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      return updatedCampaigns;
+    });
     if (selectedCampaign?.id === id) {
       setSelectedCampaign(null);
     }

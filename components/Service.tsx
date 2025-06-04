@@ -423,7 +423,7 @@ export interface AnalyzeTrendsInput {
   urls: string[];
   query: string;
   keywords: string[];
-  campaign_type?: "keyword" | "url" | "trending";
+  type?: "keyword" | "url" | "trending";
   depth: number;
   max_pages: number;
   batch_size: number;
@@ -481,7 +481,7 @@ export const analyzeTrends = async ({
   urls = [],
   query = "",
   keywords = [],
-  campaign_type = "keyword",
+  type = "keyword",
   depth = 3,
   max_pages = 10,
   batch_size = 1,
@@ -507,7 +507,7 @@ export const analyzeTrends = async ({
       urls,
       query,
       keywords,
-      campaign_type,
+      type,
       depth,
       max_pages,
       batch_size,
@@ -732,7 +732,7 @@ export const generateContent = async ({
   urls = [],
   query = "",
   keywords = [],
-  campaign_type = "keyword",
+  type = "keyword",
   depth = 3,
   max_pages = 10,
   batch_size = 1,
@@ -758,7 +758,7 @@ export const generateContent = async ({
       urls,
       query,
       keywords,
-      campaign_type,
+      type,
       depth,
       max_pages,
       batch_size,
@@ -1098,6 +1098,182 @@ export const generateImageMachineContent = async (payload: {
         error instanceof Error
           ? error.message
           : "Unexpected error occurred during image generation.",
+    };
+  }
+};
+
+export const storeClaudeKey = async (apiKey: string): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return { success: false, message: "No token found" };
+    }
+
+    if (!apiKey) {
+      console.error("No API key provided.");
+      return { success: false, message: "API key is required" };
+    }
+
+    const response = await Service(
+      "store_claude_key",
+      "POST",
+      { api_key: apiKey },
+      undefined,
+      true
+    );
+
+    if (response?.status === "success") {
+      return {
+        success: true,
+        message: response.message || "Claude key stored successfully",
+      };
+    } else {
+      const errorMessage =
+        response?.detail?.[0]?.msg ||
+        response?.message ||
+        "Failed to store Claude API key";
+      console.error("Failed to store Claude key:", response);
+      return { success: false, message: errorMessage };
+    }
+  } catch (error: any) {
+    console.error("Error during Claude key storage:", error);
+    return {
+      success: false,
+      message: error?.detail?.[0]?.msg || "Failed to store Claude API key",
+    };
+  }
+};
+
+export const storeElevenLabsKey = async (apiKey: string): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return { success: false, message: "No token found" };
+    }
+
+    if (!apiKey) {
+      console.error("No API key provided.");
+      return { success: false, message: "API key is required" };
+    }
+
+    const response = await Service(
+      "store_elevenlabs_key",
+      "POST",
+      { api_key: apiKey },
+      undefined,
+      true
+    );
+
+    if (response?.status === "success") {
+      return {
+        success: true,
+        message: response.message || "ElevenLabs key stored successfully",
+      };
+    } else {
+      const errorMessage =
+        response?.detail?.[0]?.msg ||
+        response?.message ||
+        "Failed to store ElevenLabs API key";
+      console.error("Failed to store ElevenLabs key:", response);
+      return { success: false, message: errorMessage };
+    }
+  } catch (error: any) {
+    console.error("Error during ElevenLabs key storage:", error);
+    return {
+      success: false,
+      message: error?.detail?.[0]?.msg || "Failed to store ElevenLabs API key",
+    };
+  }
+};
+
+export const storeMidjourneyKey = async (apiKey: string): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return { success: false, message: "No token found" };
+    }
+
+    if (!apiKey) {
+      console.error("No API key provided.");
+      return { success: false, message: "API key is required" };
+    }
+
+    const response = await Service(
+      "store_midjourney_key",
+      "POST",
+      { api_key: apiKey },
+      undefined,
+      true
+    );
+
+    if (response?.status === "success") {
+      return {
+        success: true,
+        message: response.message || "Midjourney key stored successfully",
+      };
+    } else {
+      const errorMessage =
+        response?.detail?.[0]?.msg ||
+        response?.message ||
+        "Failed to store Midjourney API key";
+      console.error("Failed to store Midjourney key:", response);
+      return { success: false, message: errorMessage };
+    }
+  } catch (error: any) {
+    console.error("Error during Midjourney key storage:", error);
+    return {
+      success: false,
+      message: error?.detail?.[0]?.msg || "Failed to store Midjourney API key",
+    };
+  }
+};
+
+export const storeOpenAIKey = async (apiKey: string): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return { success: false, message: "No token found" };
+    }
+
+    if (!apiKey) {
+      console.error("No API key provided.");
+      return { success: false, message: "API key is required" };
+    }
+
+    const response = await Service(
+      "store_openai_key",
+      "POST",
+      { api_key: apiKey },
+      undefined,
+      true
+    );
+
+    if (response?.status === "success") {
+      return {
+        success: true,
+        message: response.message || "OpenAI key stored successfully",
+      };
+    } else {
+      const errorMessage =
+        response?.detail?.[0]?.msg ||
+        response?.message ||
+        "Failed to store OpenAI API key";
+      console.error("Failed to store OpenAI key:", response);
+      return { success: false, message: errorMessage };
+    }
+  } catch (error: any) {
+    console.error("Error during OpenAI key storage:", error);
+    return {
+      success: false,
+      message: error?.detail?.[0]?.msg || "Failed to store OpenAI API key",
     };
   }
 };

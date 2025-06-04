@@ -109,7 +109,7 @@ interface Campaign1 extends CampaignBase {
 interface CampaignSettingsProps {
   setSettings: Dispatch<SetStateAction<Campaign[]>>;
   campaign: Campaign;
-  trendingKeyword?: string; // Made optional to align with usage
+  trendingKeyword?: string;
   onSave: (
     updatedCampaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">
   ) => void;
@@ -118,7 +118,7 @@ interface CampaignSettingsProps {
 
 export function CampaignSettings({
   campaign,
-  trendingKeyword = "", // Default to empty string
+  trendingKeyword = "",
   setSettings,
   onSave,
   onCancel,
@@ -136,36 +136,92 @@ export function CampaignSettings({
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
 
-  // Advanced settings
+  // Advanced settings with enforced false defaults for toggles
   const [extractionSettings, setExtractionSettings] = useState({
-    webScrapingDepth: campaign.extractionSettings?.webScrapingDepth ?? 2,
-    includeImages: campaign.extractionSettings?.includeImages ?? true,
-    includeLinks: campaign.extractionSettings?.includeLinks ?? true,
-    maxPages: campaign.extractionSettings?.maxPages ?? 1,
-    batchSize: campaign.extractionSettings?.batchSize ?? 10,
+    webScrapingDepth: 2,
+    includeImages: false,
+    includeLinks: false,
+    maxPages: 10,
+    batchSize: 10,
   });
 
   const [preprocessingSettings, setPreprocessingSettings] = useState({
-    removeStopwords: campaign.preprocessingSettings?.removeStopwords ?? true,
-    stemming: campaign.preprocessingSettings?.stemming ?? true,
-    lemmatization: campaign.preprocessingSettings?.lemmatization ?? true,
-    caseSensitive: campaign.preprocessingSettings?.caseSensitive ?? false,
+    removeStopwords: false,
+    stemming: false,
+    lemmatization: false,
+    caseSensitive: false,
   });
 
   const [entitySettings, setEntitySettings] = useState({
-    extractPersons: campaign.entitySettings?.extractPersons ?? true,
-    extractOrganizations: campaign.entitySettings?.extractOrganizations ?? true,
-    extractLocations: campaign.entitySettings?.extractLocations ?? true,
-    extractDates: campaign.entitySettings?.extractDates ?? true,
-    confidenceThreshold: campaign.entitySettings?.confidenceThreshold ?? 0.7,
+    extractPersons: false,
+    extractOrganizations: false,
+    extractLocations: false,
+    extractDates: false,
+    confidenceThreshold: 0.7,
   });
 
   const [modelingSettings, setModelingSettings] = useState({
-    algorithm: campaign.modelingSettings?.algorithm ?? "llm", // Changed default to "llm"
-    numTopics: campaign.modelingSettings?.numTopics ?? 5,
-    iterations: campaign.modelingSettings?.iterations ?? 10,
-    passThreshold: campaign.modelingSettings?.passThreshold ?? 0.5,
+    algorithm: "llm", // Enforce "llm" as default
+    numTopics: 5,
+    iterations: 10,
+    passThreshold: 0.5,
   });
+
+  // Add a flag to control rendering after setting defaults
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Sync non-toggle state with campaign prop changes, but enforce "llm" as default
+  useEffect(() => {
+    setName(campaign.name);
+    setDescription(campaign.description);
+    setType(campaign.type);
+    setKeywords(campaign.keywords || []);
+    setUrls(campaign.urls || []);
+    // Only sync non-toggle settings to avoid overriding defaults
+    setExtractionSettings({
+      webScrapingDepth: campaign.extractionSettings?.webScrapingDepth ?? 2,
+      includeImages: false, // Enforce false
+      includeLinks: false, // Enforce false
+      maxPages: campaign.extractionSettings?.maxPages ?? 10,
+      batchSize: campaign.extractionSettings?.batchSize ?? 10,
+    });
+    setPreprocessingSettings({
+      removeStopwords: false, // Enforce false
+      stemming: false, // Enforce false
+      lemmatization: false, // Enforce false
+      caseSensitive: false, // Enforce false
+    });
+    setEntitySettings({
+      extractPersons: false, // Enforce false
+      extractOrganizations: false, // Enforce false
+      extractLocations: false, // Enforce false
+      extractDates: false, // Enforce false
+      confidenceThreshold: campaign.entitySettings?.confidenceThreshold ?? 0.7,
+    });
+    // Always set algorithm to "llm" on initial mount to enforce default
+    setModelingSettings({
+      algorithm: "llm", // Force "llm" as default, ignoring campaign prop
+      numTopics: campaign.modelingSettings?.numTopics ?? 5,
+      iterations: campaign.modelingSettings?.iterations ?? 10,
+      passThreshold: campaign.modelingSettings?.passThreshold ?? 0.5,
+    });
+    setIsMounted(true); // Allow rendering after setting defaults
+  }, [campaign]);
+
+  // Log initial state for debugging
+  // useEffect(() => {
+  //   console.log("Initial State:", {
+  //     extractionSettings,
+  //     preprocessingSettings,
+  //     entitySettings,
+  //     modelingSettings,
+  //   });
+  // }, [
+  //   extractionSettings,
+  //   preprocessingSettings,
+  //   entitySettings,
+  //   modelingSettings,
+  // ]);
 
   const { toast } = useToast();
 
@@ -184,7 +240,6 @@ export function CampaignSettings({
     });
   };
 
-  // Info modal state
   const [infoModal, setInfoModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -195,7 +250,6 @@ export function CampaignSettings({
     description: "",
   });
 
-  // Parameter descriptions for the info modals
   const parameterDescriptions = {
     maxPages: (
       <div className="space-y-2">
@@ -236,6 +290,31 @@ export function CampaignSettings({
         <div className="text-sm text-gray-600 mt-2">
           Like checkout lanes – more lanes speed things up but annoy the store
           manager.
+        </div>
+      </div>
+    ),
+    includeImages: (
+      <div className="space-y-2">
+        <div>Determines whether images are included in the scraped data.</div>
+        <div>
+          <strong>ON:</strong> Scrapes image URLs and metadata (increases data
+          size).
+        </div>
+        <div>
+          <strong>OFF:</strong> Ignores images (faster scraping).
+        </div>
+      </div>
+    ),
+    includeLinks: (
+      <div className="space-y-2">
+        <div>
+          Determines whether hyperlinks are included in the scraped data.
+        </div>
+        <div>
+          <strong>ON:</strong> Extracts all URLs found on the page.
+        </div>
+        <div>
+          <strong>OFF:</strong> Ignores links (reduces noise in data).
         </div>
       </div>
     ),
@@ -324,7 +403,8 @@ export function CampaignSettings({
     algorithm: (
       <div className="space-y-4">
         <div>
-          <strong>LLM:</strong> Uses advanced large language models for context-aware topic modeling. Ideal for nuanced and complex datasets.
+          <strong>LLM:</strong> Uses advanced large language models for
+          context-aware topic modeling. Ideal for nuanced and complex datasets.
         </div>
         <div>
           <strong>LDA:</strong> Classic method (like sorting docs into folders).
@@ -429,7 +509,7 @@ export function CampaignSettings({
     setTimeout(() => {
       setIsSaving(false);
       setShowSavedModal(true);
-    }, 800);
+    }, 1000);
   };
 
   const handleBuildCampaign = async () => {
@@ -444,7 +524,7 @@ export function CampaignSettings({
         urls: urls,
         query,
         keywords: keywordArray,
-        campaign_type: type,
+        type: type,
         depth: extractionSettings.webScrapingDepth,
         max_pages: extractionSettings.maxPages,
         batch_size: extractionSettings.batchSize,
@@ -456,13 +536,12 @@ export function CampaignSettings({
         extract_organizations: entitySettings.extractOrganizations,
         extract_locations: entitySettings.extractLocations,
         extract_dates: entitySettings.extractDates,
-        topic_tool: modelingSettings.algorithm || "llm", // Ensure "llm" as fallback
+        topic_tool: modelingSettings.algorithm || "llm",
         num_topics: modelingSettings.numTopics,
         iterations: modelingSettings.iterations,
         pass_threshold: modelingSettings.passThreshold,
       };
 
-      console.log("Payload sent to API:", JSON.stringify(payload, null, 2));
       let response;
       if (trendingKeyword.trim()) {
         const Trendingpayload = {
@@ -479,8 +558,8 @@ export function CampaignSettings({
       if (response.status === "success") {
         const campaignDescription =
           Array.isArray(response.posts) &&
-            response.posts.length > 0 &&
-            response.posts[0].text
+          response.posts.length > 0 &&
+          response.posts[0].text
             ? response.posts[0].text
             : description.trim();
 
@@ -495,23 +574,23 @@ export function CampaignSettings({
 
         const campaignTopics =
           Array.isArray(response.posts) &&
-            response.posts.length > 0 &&
-            response.posts[0].topics &&
-            Array.isArray(response.posts[0].topics)
+          response.posts.length > 0 &&
+          response.posts[0].topics &&
+          Array.isArray(response.posts[0].topics)
             ? normalizeTopics(response.posts[0].topics)
-              .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
-              .filter((t) => !["non", "com"].includes(t.toLowerCase()))
+                .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
+                .filter((t) => !["non", "com"].includes(t.toLowerCase()))
             : response.topics &&
               Array.isArray(response.topics) &&
               response.topics.length > 0
-              ? normalizeTopics(response.topics).map(
+            ? normalizeTopics(response.topics).map(
                 (t) => t.charAt(0).toUpperCase() + t.slice(1)
               )
-              : type === "keyword"
-                ? keywords
-                : type === "trending"
-                  ? campaign.trendingTopics || []
-                  : [];
+            : type === "keyword"
+            ? keywords
+            : type === "trending"
+            ? campaign.trendingTopics || []
+            : [];
 
         const newCampaign: Campaign = {
           id: campaign.id || `campaign-${Date.now()}`,
@@ -532,12 +611,20 @@ export function CampaignSettings({
         };
 
         setSettings((prevCampaigns) => {
+          let updatedCampaigns;
           if (campaign.id) {
-            return prevCampaigns.map((c) =>
+            updatedCampaigns = prevCampaigns.map((c) =>
               c.id === campaign.id ? newCampaign : c
             );
+          } else {
+            updatedCampaigns = [...prevCampaigns, newCampaign];
           }
-          return [...prevCampaigns, newCampaign];
+          // Sort campaigns by createdAt in descending order (newest first)
+          updatedCampaigns.sort(
+            (a: Campaign, b: Campaign) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          return updatedCampaigns;
         });
 
         const updatedCampaign: Omit<
@@ -558,14 +645,31 @@ export function CampaignSettings({
           modelingSettings,
         };
 
-        console.log("Saving campaign with data:", updatedCampaign);
         onSave(updatedCampaign);
+
+        // Fetch updated campaigns from API
+        const apiResponse = await getAllCampaigns();
+        if (apiResponse.status === "success") {
+          // Sort campaigns by createdAt in descending order (newest first)
+          const sortedCampaigns = (apiResponse.message.campaigns || []).sort(
+            (a: Campaign, b: Campaign) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setSettings(sortedCampaigns);
+        } else {
+          console.error(
+            "Failed to fetch updated campaigns:",
+            apiResponse.message
+          );
+        }
 
         toast({
           title: "Campaign Built Successfully",
           description:
             "Your campaign base has been created with the analyzed trends.",
         });
+
+        onCancel();
       } else {
         console.error("API Error Details:", JSON.stringify(response, null, 2));
         throw new Error(response.message || "Failed to analyze trends");
@@ -584,6 +688,11 @@ export function CampaignSettings({
       setIsBuilding(false);
     }
   };
+
+  // Render a loading state until defaults are set
+  if (!isMounted) {
+    return <div>Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -876,14 +985,21 @@ export function CampaignSettings({
                     </Label>
                     <button
                       type="button"
+                      onClick={() =>
+                        openInfoModal(
+                          "Include Images",
+                          parameterDescriptions.includeImages
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
                     </button>
                   </div>
                   <Switch
-                    id="include HawkinsIncludeImages"
+                    id="include-images"
                     checked={extractionSettings.includeImages}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setExtractionSettings({
                         ...extractionSettings,
@@ -900,6 +1016,12 @@ export function CampaignSettings({
                     </Label>
                     <button
                       type="button"
+                      onClick={() =>
+                        openInfoModal(
+                          "Include Links",
+                          parameterDescriptions.includeLinks
+                        )
+                      }
                       className="text-gray-500 hover:text-gray-700 focus:outline-none"
                     >
                       <InfoIcon className="h-4 w-4" />
@@ -908,6 +1030,7 @@ export function CampaignSettings({
                   <Switch
                     id="include-links"
                     checked={extractionSettings.includeLinks}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setExtractionSettings({
                         ...extractionSettings,
@@ -942,6 +1065,7 @@ export function CampaignSettings({
                   <Switch
                     id="remove-stopwords"
                     checked={preprocessingSettings.removeStopwords}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setPreprocessingSettings({
                         ...preprocessingSettings,
@@ -972,6 +1096,7 @@ export function CampaignSettings({
                   <Switch
                     id="stemming"
                     checked={preprocessingSettings.stemming}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setPreprocessingSettings({
                         ...preprocessingSettings,
@@ -1002,6 +1127,7 @@ export function CampaignSettings({
                   <Switch
                     id="lemmatization"
                     checked={preprocessingSettings.lemmatization}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setPreprocessingSettings({
                         ...preprocessingSettings,
@@ -1032,6 +1158,7 @@ export function CampaignSettings({
                   <Switch
                     id="case-sensitive"
                     checked={preprocessingSettings.caseSensitive}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setPreprocessingSettings({
                         ...preprocessingSettings,
@@ -1066,6 +1193,7 @@ export function CampaignSettings({
                   <Switch
                     id="extract-persons"
                     checked={entitySettings.extractPersons}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setEntitySettings({
                         ...entitySettings,
@@ -1096,6 +1224,7 @@ export function CampaignSettings({
                   <Switch
                     id="extract-organizations"
                     checked={entitySettings.extractOrganizations}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setEntitySettings({
                         ...entitySettings,
@@ -1126,6 +1255,7 @@ export function CampaignSettings({
                   <Switch
                     id="extract-locations"
                     checked={entitySettings.extractLocations}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setEntitySettings({
                         ...entitySettings,
@@ -1156,6 +1286,7 @@ export function CampaignSettings({
                   <Switch
                     id="extract-dates"
                     checked={entitySettings.extractDates}
+                    defaultChecked={false}
                     onCheckedChange={(checked) =>
                       setEntitySettings({
                         ...entitySettings,
@@ -1237,7 +1368,9 @@ export function CampaignSettings({
                     <SelectValue placeholder="Select algorithm" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="llm">Large Language Model (LLM)</SelectItem>
+                    <SelectItem value="llm">
+                      Large Language Model (LLM)
+                    </SelectItem>
                     <SelectItem value="lda">
                       Latent Dirichlet Allocation (LDA)
                     </SelectItem>

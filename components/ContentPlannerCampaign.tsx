@@ -99,7 +99,7 @@ export function ContentPlannerCampaign({
   >("keyword");
   const [keywordInput, setKeywordInput] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [settings, setSettings] = useState(campaigns);
+  const [settings, setSettings] = useState<Campaign[]>(campaigns);
   const [urlInput, setUrlInput] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
   const [error, setError] = useState<{ isOpen: boolean; message: string }>({
@@ -112,7 +112,7 @@ export function ContentPlannerCampaign({
     webScrapingDepth: 2,
     includeImages: true,
     includeLinks: true,
-    maxPages: 1,
+    maxPages: 10,
     batchSize: 10,
   });
 
@@ -145,7 +145,51 @@ export function ContentPlannerCampaign({
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
   const [topics, setTTopics] = useState<string[]>([]);
   const formRef = useRef<HTMLDivElement>(null);
+  const campaignsListRef = useRef<HTMLDivElement>(null); // Ref for the campaigns list container
   const [campaignDisplay, setCampaignDisplay] = useState<Campaign | null>(null);
+
+  // Sync settings with campaigns prop whenever campaigns change
+  useEffect(() => {
+    setSettings(campaigns);
+  }, [campaigns]);
+
+  // Fetch campaigns on mount and sort them
+  useEffect(() => {
+    const getAllCampaign = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getAllCampaigns();
+        if (response.status === "success") {
+          const sortedCampaigns = (response.message.campaigns || []).sort(
+            (a: Campaign, b: Campaign) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setSettings(sortedCampaigns);
+        } else {
+          console.error(
+            "API Error Details:",
+            JSON.stringify(response, null, 2)
+          );
+          throw new Error(response.message || "Failed to analyze trends");
+        }
+      } catch (error) {
+        console.error("Error building campaign:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    getAllCampaign();
+  }, []);
+
+  // Scroll to top of campaigns list whenever settings change
+  useEffect(() => {
+    if (campaignsListRef.current && !isCreating) {
+      campaignsListRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [settings, isCreating]);
 
   const resetForm = () => {
     setCampaignName("");
@@ -165,7 +209,7 @@ export function ContentPlannerCampaign({
       webScrapingDepth: 2,
       includeImages: true,
       includeLinks: true,
-      maxPages: 1,
+      maxPages: 10,
       batchSize: 10,
     });
     setPreprocessingSettings({
@@ -270,9 +314,6 @@ export function ContentPlannerCampaign({
       onEditCampaign(editingId, campaignData);
     } else {
       onAddCampaign(campaignData);
-      if (campaignType === "trending") {
-        router.push("/dashboard/campaigns/edit/new-trending-campaign");
-      }
     }
     resetForm();
   };
@@ -387,7 +428,6 @@ export function ContentPlannerCampaign({
     setIsMergeModalOpen(false);
     setIsMergeMode(false);
     setSelectedCampaigns([]);
-    router.push("/dashboard?tab=content-planner&view=campaigns");
   };
 
   const cancelMerge = () => {
@@ -395,49 +435,23 @@ export function ContentPlannerCampaign({
     setSelectedCampaigns([]);
   };
 
-  //call the API to get all the campaigns at once.
-  useEffect(() => {
-    const getAllCampaign = async () => {
-      setIsLoading(true);
-      try {
-        const response = await getAllCampaigns();
-        if (response.status === "success") {
-          setSettings(response.message.campaigns);
-        } else {
-          console.error(
-            "API Error Details:",
-            JSON.stringify(response, null, 2)
-          );
-          throw new Error(response.message || "Failed to analyze trends");
-        }
-      } catch (error) {
-        console.error("Error building campaign:", error);
-        // toast({
-        //   variant: "destructive",
-        //   title: "Error Building Campaign",
-        //   description:
-        //     error instanceof Error
-        //       ? error.message
-        //       : "An unexpected error occurred.",
-        // });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getAllCampaign();
-  }, []);
-
   const deleteCampaign = async (id: string) => {
     setIsLoading(true);
     try {
       const response = await deleteCampaignsById(id);
-      console.log("Delete response:", response);
 
       if (response.status === "success") {
-        // ✅ Remove the deleted campaign from state
-        setSettings((prevCampaigns) =>
-          prevCampaigns.filter((campaign) => campaign.id !== id)
-        );
+        setSettings((prevCampaigns) => {
+          const updatedCampaigns = prevCampaigns.filter(
+            (campaign) => campaign.id !== id
+          );
+          updatedCampaigns.sort(
+            (a: Campaign, b: Campaign) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          return updatedCampaigns;
+        });
+        onDeleteCampaign(id);
       } else {
         setError({
           isOpen: true,
@@ -454,23 +468,6 @@ export function ContentPlannerCampaign({
       setIsLoading(false);
     }
   };
-
-  // const searchTrendingTrend = async (query: string) => {
-  //   console.log("searchTrendingTrend");
-  //   try {
-  //     const response = await getTrendingContent(query);
-
-  //     if (response.status === "success") {
-  //       console.log("Trending content fetched successfully:", response.message);
-  //       setTrendingTopics(response.message);
-  //     } else {
-  //       console.error("API Error Details:", JSON.stringify(response, null, 2));
-  //       throw new Error(response.message || "Failed to fetch trending content");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching trending content:", error);
-  //   }
-  // };
 
   if (isLoading) {
     return (
@@ -703,23 +700,6 @@ export function ContentPlannerCampaign({
                           onChange={(e) => setTrendingKeyword(e.target.value)}
                           placeholder="Enter keyword to find trending topics"
                         />
-                        {/* <Button
-                            onClick={() => {
-                              if (trendingKeyword.trim()) {
-                                const mockTrendingTopics = [
-                                  `#${trendingKeyword}Trends`,
-                                  `${trendingKeyword} News`,
-                                  `${trendingKeyword} Updates`,
-                                  `${trendingKeyword} 2025`,
-                                ];
-                                setTrendingTopics(mockTrendingTopics);
-                              }
-                            }
-                          }
-                          onClick={() => searchTrendingTrend(trendingKeyword)}
-                        >
-                          Search
-                        </Button> */}
                       </div>
                       {trendingTopics.length > 0 && (
                         <div className="border rounded-md p-4">
@@ -768,17 +748,6 @@ export function ContentPlannerCampaign({
                   </p>
                 </div>
               </CardContent>
-              {/* <CardFooter className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  className="bg-green-600 text-white hover:bg-green-700"
-                >
-                  Build Campaign Base  
-                </Button>
-              </CardFooter> */}
               <div className="text-center mt-2 mb-4">
                 <span className="text-xs text-gray-500">
                   Building a Base starts your plan
@@ -789,7 +758,7 @@ export function ContentPlannerCampaign({
         </div>
       )}
 
-      <div className="space-y-4">
+      <div ref={campaignsListRef} className="space-y-4">
         {settings?.map((campaign) => (
           <Card key={campaign.id}>
             <CardContent className="p-6">
@@ -813,8 +782,8 @@ export function ContentPlannerCampaign({
                         {campaign.type === "keyword"
                           ? "Keywords"
                           : campaign.type === "url"
-                            ? "URLs"
-                            : "Trending"}
+                          ? "URLs"
+                          : "Trending"}
                       </span>
                     </div>
                     <p className="text-gray-500 mt-1">{campaign.description}</p>
@@ -830,7 +799,6 @@ export function ContentPlannerCampaign({
                   <Button
                     variant="destructive"
                     size="sm"
-                    // onClick={() => onDeleteCampaign(campaign.id)}
                     onClick={() => deleteCampaign(campaign.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -914,27 +882,6 @@ export function ContentPlannerCampaign({
                       </div>
                     </div>
                   )}
-                {/* {(campaign.topics || campaign.type === "url") &&
-                  (campaign.topics?.length || campaign.keywords?.length) && (
-                    <div>
-                      <Label className="mb-2 block">Topics:</Label>
-                      <div className="flex flex-wrap gap-2 zdsfsdfsdfsd">
-                        {(campaign.topics?.length
-                          ? campaign.topics
-                          : campaign.type === "url" && campaign.keywords
-                            ? campaign.keywords
-                            : []
-                        ).map((topic, index) => (
-                          <div
-                            key={index}
-                            className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full SDdasfasfsas"
-                          >
-                            {topic}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )} */}
               </div>
             </CardContent>
           </Card>

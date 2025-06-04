@@ -13,6 +13,10 @@ import {
   linkedinConnect,
   twitterConnect,
   wordpressConnect,
+  storeClaudeKey,
+  storeElevenLabsKey,
+  storeMidjourneyKey,
+  storeOpenAIKey,
 } from "@/components/Service";
 
 interface PlatformConnection {
@@ -40,10 +44,10 @@ export default function AccountSettings() {
   const [connections, setConnections] = useState<
     Record<string, PlatformConnection>
   >({});
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<
+    Record<string, string | null>
+  >({});
   const [savingPlatform, setSavingPlatform] = useState<string | null>(null);
-  const [savedPlatform, setSavedPlatform] = useState<string | null>(null);
   const [activePlatforms, setActivePlatforms] = useState<
     Record<string, boolean>
   >(
@@ -81,7 +85,6 @@ export default function AccountSettings() {
     string | null
   >(null);
 
-  // Add states to track message type (success or error)
   const [linkedinMessageType, setLinkedinMessageType] = useState<
     "success" | "error" | null
   >(null);
@@ -230,10 +233,7 @@ export default function AccountSettings() {
   };
 
   const handleLogout = () => {
-    // Clear only the authentication token (if applicable)
     localStorage.removeItem("token");
-
-    // Reset component state (UI will re-sync with localStorage on reload)
     setWordpressConnected(false);
     setLinkedinConnected(false);
     setTwitterConnected(false);
@@ -243,13 +243,10 @@ export default function AccountSettings() {
     setWordpressMessageType(null);
     setLinkedinMessageType(null);
     setTwitterMessageType(null);
-
-    // Redirect to login page
     window.location.href = "/login";
   };
 
   useEffect(() => {
-    // Check initial connection status from localStorage only
     const linkedinStored = localStorage.getItem("linkedin_connected");
     const twitterStored = localStorage.getItem("twitter_connected");
     const wordpressStored = localStorage.getItem("wordpress_connected");
@@ -260,7 +257,6 @@ export default function AccountSettings() {
   }, []);
 
   useEffect(() => {
-    // Handle URL parameters for connection callbacks
     const params = new URLSearchParams(window.location.search);
 
     const handleConnectionCallback = (
@@ -332,20 +328,67 @@ export default function AccountSettings() {
   const handleSave = async (platform: string) => {
     if (!activePlatforms[platform]) return;
     setSavingPlatform(platform);
-    console.log(`Saving connection for ${platform}:`, connections[platform]);
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulating API call
-    setSavingPlatform(null);
-    setSavedPlatform(platform);
-  };
 
-  useEffect(() => {
-    if (savedPlatform) {
-      const timer = setTimeout(() => {
-        setSavedPlatform(null);
+    try {
+      let result;
+      const apiKey = connections[platform]?.apiKey?.trim() || "";
+
+      if (!apiKey) {
+        setSuccessMessage((prev) => ({
+          ...prev,
+          [platform]: "API key is required",
+        }));
+        setTimeout(() => {
+          setSuccessMessage((prev) => ({ ...prev, [platform]: null }));
+        }, 3000);
+        setSavingPlatform(null);
+        return;
+      }
+
+      switch (platform) {
+        case "Claude":
+          result = await storeClaudeKey(apiKey);
+          break;
+        case "Eleven Labs":
+          result = await storeElevenLabsKey(apiKey);
+          break;
+        case "Midjourney":
+          result = await storeMidjourneyKey(apiKey);
+          break;
+        case "OpenAI":
+          result = await storeOpenAIKey(apiKey);
+          break;
+        default:
+          console.log(
+            `Saving connection for ${platform}:`,
+            connections[platform]
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          result = { success: true, message: `${platform} settings saved` };
+      }
+
+      setSuccessMessage((prev) => ({
+        ...prev,
+        [platform]: result.message,
+      }));
+      setTimeout(() => {
+        setSuccessMessage((prev) => ({ ...prev, [platform]: null }));
       }, 3000);
-      return () => clearTimeout(timer);
+    } catch (error: any) {
+      console.error(`Error saving ${platform} settings:`, error);
+      const errorMessage =
+        error?.detail?.[0]?.msg || `Failed to save ${platform} settings`;
+      setSuccessMessage((prev) => ({
+        ...prev,
+        [platform]: errorMessage,
+      }));
+      setTimeout(() => {
+        setSuccessMessage((prev) => ({ ...prev, [platform]: null }));
+      }, 3000);
+    } finally {
+      setSavingPlatform(null);
     }
-  }, [savedPlatform]);
+  };
 
   const renderPlatformCard = (platform: string) => {
     const fields = (() => {
@@ -439,10 +482,18 @@ export default function AccountSettings() {
                 `Save ${platform} Connection`
               )}
             </Button>
-            {savedPlatform === platform && (
-              <div className="absolute left-0 right-0 top-0 flex items-center justify-center text-green-600 font-medium">
+            {successMessage[platform] && (
+              <div
+                className={`absolute left-0 right-0 top-0 flex items-center justify-center font-medium ${
+                  successMessage[platform]?.toLowerCase().includes("error") ||
+                  successMessage[platform]?.toLowerCase().includes("failed") ||
+                  successMessage[platform]?.toLowerCase().includes("required")
+                    ? "text-red-600"
+                    : "text-green-600"
+                }`}
+              >
                 <Check className="w-4 h-4 mr-1" />
-                Settings Saved
+                {successMessage[platform]}
               </div>
             )}
           </div>

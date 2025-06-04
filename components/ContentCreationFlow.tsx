@@ -19,6 +19,7 @@ import {
   X,
   Wand2,
   Upload,
+  AlertCircle, // Import AlertCircle for error icon
 } from "lucide-react";
 import {
   Tooltip,
@@ -28,14 +29,21 @@ import {
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { Instagram, Facebook, Twitter, Linkedin, Music } from "lucide-react";
-
 import {
   generateContentAPI,
   regenerateContentAPI,
   generateImageMachineContent,
 } from "./Service";
-
 import { Header } from "./Header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle, // Use AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 interface ContentCreationFlowProps {
   selectedItems: Array<{
@@ -59,6 +67,7 @@ export function ContentCreationFlow({
     null
   );
   const [regeneratingImage, setRegeneratingImage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [contentGenPayload, setContentGenPayload] = useState(() => {
     const stored = localStorage.getItem("contentGenPayload");
@@ -215,6 +224,11 @@ export function ContentCreationFlow({
         setIsLoading(true);
         try {
           const response = await generateContentAPI();
+          console.log("response message - ", response.message);
+          if (response?.message === "Request failed with status code 401") {
+            setErrorMessage("Invalid token, Please login again.");
+            return;
+          }
           if (
             response?.status === "success" &&
             Array.isArray(response.message)
@@ -718,6 +732,33 @@ export function ContentCreationFlow({
           )}
         </CardFooter>
       </Card>
+
+      {/* AlertDialog for Error Message */}
+      <AlertDialog
+        open={!!errorMessage}
+        onOpenChange={() => setErrorMessage(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 hover:text-red-700" />
+              {errorMessage || "Error"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You will be redirected to the login page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                window.location.href = "/login";
+              }}
+            >
+              Login
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }

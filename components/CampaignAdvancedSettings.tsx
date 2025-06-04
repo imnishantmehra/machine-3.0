@@ -28,7 +28,7 @@ export function CampaignAdvancedSettings({
     webScrapingDepth: campaign.extractionSettings?.webScrapingDepth || 2,
     includeImages: campaign.extractionSettings?.includeImages || true,
     includeLinks: campaign.extractionSettings?.includeLinks || true,
-    maxPages: campaign.extractionSettings?.maxPages || 1,
+    maxPages: campaign.extractionSettings?.maxPages || 10,
     batchSize: campaign.extractionSettings?.batchSize || 10,
   });
 
