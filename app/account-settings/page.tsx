@@ -119,8 +119,8 @@ export default function AccountSettings() {
           setLinkedinMessageType(null);
         }, 5000);
       } else {
-        setLinkedinSuccessMessage("LinkedIn connection failed.");
-        setLinkedinMessageType("error");
+        // setLinkedinSuccessMessage("LinkedIn connection failed.");
+        // setLinkedinMessageType("error");
         setTimeout(() => {
           setLinkedinSuccessMessage(null);
           setLinkedinMessageType(null);
@@ -153,8 +153,8 @@ export default function AccountSettings() {
           setTwitterMessageType(null);
         }, 5000);
       } else {
-        setTwitterSuccessMessage("Twitter connection failed.");
-        setTwitterMessageType("error");
+        // setTwitterSuccessMessage("Twitter connection failed.");
+        // setTwitterMessageType("error");
         setTimeout(() => {
           setTwitterSuccessMessage(null);
           setTwitterMessageType(null);
