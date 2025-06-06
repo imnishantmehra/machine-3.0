@@ -482,11 +482,15 @@ export default function Dashboard() {
                 ? "content-planner"
                 : tabParam === "podcast-tools"
                 ? "podcast-tools"
-                : "content-planner"
+                : // : "content-planner"
+                  "author-planning"
             }
             className="w-full"
           >
             <TabsList className="w-full mb-4 bg-white">
+              <TabsTrigger value="author-planning" className="flex-1">
+                Author Planning
+              </TabsTrigger>
               <TabsTrigger value="content-planner" className="flex-1">
                 Content Planner
               </TabsTrigger>
