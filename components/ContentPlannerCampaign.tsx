@@ -94,6 +94,7 @@ export function ContentPlannerCampaign({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [campaignDescription, setCampaignDescription] = useState("");
+  const [query, setQuery] = useState("");
   const [campaignType, setCampaignType] = useState<
     "keyword" | "url" | "trending"
   >("keyword");
@@ -535,6 +536,7 @@ export function ContentPlannerCampaign({
                 id: editingId || "",
                 name: campaignName,
                 description: campaignDescription,
+                query: query,
                 type: campaignType,
                 keywords: keywords,
                 urls: urls,
@@ -585,6 +587,15 @@ export function ContentPlannerCampaign({
                     value={campaignDescription}
                     onChange={(e) => setCampaignDescription(e.target.value)}
                     placeholder="Enter campaign description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-description">Query</Label>
+                  <Textarea
+                    id="campaign-description"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Enter the query you want to scrape using LLM"
                   />
                 </div>
                 <Tabs
@@ -782,8 +793,8 @@ export function ContentPlannerCampaign({
                         {campaign.type === "keyword"
                           ? "Keywords"
                           : campaign.type === "url"
-                          ? "URLs"
-                          : "Trending"}
+                            ? "URLs"
+                            : "Trending"}
                       </span>
                     </div>
                     <p className="text-gray-500 mt-1">{campaign.description}</p>

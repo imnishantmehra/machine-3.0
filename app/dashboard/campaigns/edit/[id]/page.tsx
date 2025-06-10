@@ -185,6 +185,7 @@ export default function EditCampaignPage() {
   const [instagramSearch, setInstagramSearch] = useState("");
   const [tiktokSearch, setTiktokSearch] = useState("");
   const [linkedinSearch, setLinkedinSearch] = useState("");
+  const [campaignQuery, setCampaignQuery] = useState("");
 
   const [selectedInstagramTopics, setSelectedInstagramTopics] = useState<
     string[]
@@ -330,9 +331,22 @@ export default function EditCampaignPage() {
             JSON.stringify(editableCampaignsFound.lemmatized_text)
           );
 
+          const storeText = {
+            text: editableCampaigns.message.raw_data[0].text || "",
+            stemmed_text: editableCampaigns.message.raw_data[0].stemmed_text || "",
+            lemmatized_text: editableCampaigns.message.raw_data[0].lemmatized_text || "",
+            stopwords_removed_text: editableCampaigns.message.raw_data[0].stopwords_removed_text || ""
+          }
+
+          localStorage.setItem(
+            "storeText",
+            JSON.stringify(storeText)
+          );
+
           setCampaign(editableCampaignsFound);
           setCampaignName(editableCampaignsFound.campaign_name);
-          setCampaignDescription(editableCampaignsFound.query);
+          setCampaignDescription(editableCampaignsFound.description);
+          setCampaignQuery(editableCampaignsFound.query);
           setCampaignType(
             editableCampaignsFound.type === "twitter"
               ? "trending"
@@ -366,7 +380,7 @@ export default function EditCampaignPage() {
     fetchCampaign();
   }, [campaignId]);
 
-  useEffect(() => {}, [trendingTopics]);
+  useEffect(() => { }, [trendingTopics]);
 
   const handleSaveCampaign = () => {
     if (!campaign) return;
@@ -687,8 +701,8 @@ export default function EditCampaignPage() {
                 {campaign.type === "keyword"
                   ? "Keywords"
                   : campaign.type === "url"
-                  ? "URLs"
-                  : "Trending"}
+                    ? "URLs"
+                    : "Trending"}
               </span>
             </CardTitle>
           </CardHeader>
@@ -796,6 +810,16 @@ export default function EditCampaignPage() {
                         id="campaign-description"
                         value={campaignDescription}
                         onChange={(e) => setCampaignDescription(e.target.value)}
+                        placeholder="Enter campaign description"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="campaign-description">Query</Label>
+                      <Textarea
+                        id="campaign-description"
+                        value={campaignQuery}
+                        onChange={(e) => setCampaignQuery(e.target.value)}
                         placeholder="Enter campaign description"
                       />
                     </div>

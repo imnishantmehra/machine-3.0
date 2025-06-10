@@ -125,6 +125,7 @@ export function CampaignSettings({
 }: CampaignSettingsProps) {
   const [name, setName] = useState(campaign.name);
   const [description, setDescription] = useState(campaign.description);
+  const [query, setQuery] = useState(campaign.query);
   const [type, setType] = useState<"keyword" | "url" | "trending">(
     campaign.type
   );
@@ -146,17 +147,17 @@ export function CampaignSettings({
   });
 
   const [preprocessingSettings, setPreprocessingSettings] = useState({
-    removeStopwords: false,
-    stemming: false,
-    lemmatization: false,
-    caseSensitive: false,
+    removeStopwords: true,
+    stemming: true,
+    lemmatization: true,
+    caseSensitive: true,
   });
 
   const [entitySettings, setEntitySettings] = useState({
-    extractPersons: false,
-    extractOrganizations: false,
-    extractLocations: false,
-    extractDates: false,
+    extractPersons: true,
+    extractOrganizations: true,
+    extractLocations: true,
+    extractDates: true,
     confidenceThreshold: 0.7,
   });
 
@@ -174,6 +175,7 @@ export function CampaignSettings({
   useEffect(() => {
     setName(campaign.name);
     setDescription(campaign.description);
+    setQuery(campaign.query);
     setType(campaign.type);
     setKeywords(campaign.keywords || []);
     setUrls(campaign.urls || []);
@@ -186,16 +188,16 @@ export function CampaignSettings({
       batchSize: campaign.extractionSettings?.batchSize ?? 10,
     });
     setPreprocessingSettings({
-      removeStopwords: false, // Enforce false
-      stemming: false, // Enforce false
-      lemmatization: false, // Enforce false
-      caseSensitive: false, // Enforce false
+      removeStopwords: true, // Enforce false
+      stemming: true, // Enforce false
+      lemmatization: true, // Enforce false
+      caseSensitive: true, // Enforce false
     });
     setEntitySettings({
-      extractPersons: false, // Enforce false
-      extractOrganizations: false, // Enforce false
-      extractLocations: false, // Enforce false
-      extractDates: false, // Enforce false
+      extractPersons: true, // Enforce true
+      extractOrganizations: true, // Enforce true
+      extractLocations: true, // Enforce true
+      extractDates: true, // Enforce true
       confidenceThreshold: campaign.entitySettings?.confidenceThreshold ?? 0.7,
     });
     // Always set algorithm to "llm" on initial mount to enforce default
@@ -515,14 +517,14 @@ export function CampaignSettings({
   const handleBuildCampaign = async () => {
     setIsBuilding(true);
     try {
-      const query = description.trim();
       const keywordArray = keywords;
 
       const payload: AnalyzeTrendsInput = {
         campaign_name: name.trim(),
         campaign_id: campaign.id || `campaign-${Date.now()}`,
         urls: urls,
-        query,
+        query: query.trim(),
+        description: description,
         keywords: keywordArray,
         type: type,
         depth: extractionSettings.webScrapingDepth,
@@ -542,6 +544,8 @@ export function CampaignSettings({
         pass_threshold: modelingSettings.passThreshold,
       };
 
+      console.log("payload", payload);
+
       let response;
       if (trendingKeyword.trim()) {
         const Trendingpayload = {
@@ -558,8 +562,8 @@ export function CampaignSettings({
       if (response.status === "success") {
         const campaignDescription =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].text
+            response.posts.length > 0 &&
+            response.posts[0].text
             ? response.posts[0].text
             : description.trim();
 
@@ -574,23 +578,23 @@ export function CampaignSettings({
 
         const campaignTopics =
           Array.isArray(response.posts) &&
-          response.posts.length > 0 &&
-          response.posts[0].topics &&
-          Array.isArray(response.posts[0].topics)
+            response.posts.length > 0 &&
+            response.posts[0].topics &&
+            Array.isArray(response.posts[0].topics)
             ? normalizeTopics(response.posts[0].topics)
-                .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
-                .filter((t) => !["non", "com"].includes(t.toLowerCase()))
+              .map((t) => t.trim().charAt(0).toUpperCase() + t.slice(1))
+              .filter((t) => !["non", "com"].includes(t.toLowerCase()))
             : response.topics &&
               Array.isArray(response.topics) &&
               response.topics.length > 0
-            ? normalizeTopics(response.topics).map(
+              ? normalizeTopics(response.topics).map(
                 (t) => t.charAt(0).toUpperCase() + t.slice(1)
               )
-            : type === "keyword"
-            ? keywords
-            : type === "trending"
-            ? campaign.trendingTopics || []
-            : [];
+              : type === "keyword"
+                ? keywords
+                : type === "trending"
+                  ? campaign.trendingTopics || []
+                  : [];
 
         const newCampaign: Campaign = {
           id: campaign.id || `campaign-${Date.now()}`,
@@ -717,6 +721,15 @@ export function CampaignSettings({
               id="campaign-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter campaign description"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="campaign-description">Query</Label>
+            <Textarea
+              id="campaign-description"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter campaign description"
             />
           </div>

@@ -96,6 +96,8 @@ const DAYS = [
   "Friday",
   "Saturday",
 ];
+
+
 const PLATFORMS = [
   { name: "Instagram", icon: Instagram },
   { name: "Facebook", icon: Facebook },
@@ -673,129 +675,129 @@ export function ContentGenerationQueue() {
                   {queueItems.some(
                     (item) => item.selected && item.generated && !item.scheduled
                   ) && (
-                    <Card className="mb-6 border-dashed border-2">
-                      <CardContent className="p-4">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center">
-                          <Send className="h-5 w-5 mr-2 text-blue-500" />
-                          Send to Production
-                        </h3>
+                      <Card className="mb-6 border-dashed border-2">
+                        <CardContent className="p-4">
+                          <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Send className="h-5 w-5 mr-2 text-blue-500" />
+                            Send to Production
+                          </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <Label htmlFor="platform" className="mb-2 block">
-                              Platform
-                            </Label>
-                            <Select
-                              value={selectedPlatform}
-                              onValueChange={setSelectedPlatform}
-                            >
-                              <SelectTrigger id="platform">
-                                <SelectValue placeholder="Select platform" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PLATFORMS.map((platform) => (
-                                  <SelectItem
-                                    key={platform.name}
-                                    value={platform.name}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <Label htmlFor="platform" className="mb-2 block">
+                                Platform
+                              </Label>
+                              <Select
+                                value={selectedPlatform}
+                                onValueChange={setSelectedPlatform}
+                              >
+                                <SelectTrigger id="platform">
+                                  <SelectValue placeholder="Select platform" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PLATFORMS.map((platform) => (
+                                    <SelectItem
+                                      key={platform.name}
+                                      value={platform.name}
+                                    >
+                                      <div className="flex items-center">
+                                        <platform.icon className="h-4 w-4 mr-2" />
+                                        {platform.name}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="time" className="mb-2 block">
+                                Time
+                              </Label>
+                              <Select
+                                value={selectedTime}
+                                onValueChange={setSelectedTime}
+                              >
+                                <SelectTrigger id="time">
+                                  <SelectValue placeholder="Select time" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {TIME_OPTIONS.map((time) => (
+                                    <SelectItem key={time} value={time}>
+                                      {time}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label className="mb-2 block">Days</Label>
+                              <ToggleGroup
+                                type="multiple"
+                                value={selectedDays}
+                                onValueChange={setSelectedDays}
+                                className="flex flex-wrap gap-1 justify-start"
+                              >
+                                {DAYS.map((day) => (
+                                  <ToggleGroupItem
+                                    key={day}
+                                    value={day}
+                                    aria-label={day}
+                                    className="px-2 py-1 text-xs"
                                   >
-                                    <div className="flex items-center">
-                                      <platform.icon className="h-4 w-4 mr-2" />
-                                      {platform.name}
-                                    </div>
-                                  </SelectItem>
+                                    {day}
+                                  </ToggleGroupItem>
                                 ))}
-                              </SelectContent>
-                            </Select>
+                              </ToggleGroup>
+                            </div>
                           </div>
 
-                          <div>
-                            <Label htmlFor="time" className="mb-2 block">
-                              Time
-                            </Label>
-                            <Select
-                              value={selectedTime}
-                              onValueChange={setSelectedTime}
-                            >
-                              <SelectTrigger id="time">
-                                <SelectValue placeholder="Select time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {TIME_OPTIONS.map((time) => (
-                                  <SelectItem key={time} value={time}>
-                                    {time}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label className="mb-2 block">Days</Label>
-                            <ToggleGroup
-                              type="multiple"
-                              value={selectedDays}
-                              onValueChange={setSelectedDays}
-                              className="flex flex-wrap gap-1 justify-start"
-                            >
-                              {DAYS.map((day) => (
-                                <ToggleGroupItem
-                                  key={day}
-                                  value={day}
-                                  aria-label={day}
-                                  className="px-2 py-1 text-xs"
-                                >
-                                  {day}
-                                </ToggleGroupItem>
-                              ))}
-                            </ToggleGroup>
-                          </div>
-                        </div>
-
-                        {(!selectedPlatform ||
-                          !selectedTime ||
-                          selectedDays.length === 0) && (
-                          <div className="flex items-center text-amber-600 mb-4 text-sm">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            Please select a platform, time, and at least one day
-                            to schedule content.
-                          </div>
-                        )}
-
-                        <Button
-                          className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90 w-full"
-                          onClick={handleSendToProduction}
-                          disabled={
-                            isGenerating ||
-                            !selectedPlatform ||
+                          {(!selectedPlatform ||
                             !selectedTime ||
-                            selectedDays.length === 0
-                          }
-                        >
-                          {isGenerating ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Scheduling...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="h-4 w-4 mr-2" />
-                              Send to Production
-                            </>
-                          )}
-                        </Button>
+                            selectedDays.length === 0) && (
+                              <div className="flex items-center text-amber-600 mb-4 text-sm">
+                                <AlertCircle className="h-4 w-4 mr-2" />
+                                Please select a platform, time, and at least one day
+                                to schedule content.
+                              </div>
+                            )}
 
-                        {schedulingSuccess && (
-                          <div className="bg-green-50 border border-green-200 rounded-md p-3 mt-4 flex items-center">
-                            <Check className="h-5 w-5 text-green-500 mr-2" />
-                            <p className="text-green-700">
-                              Content successfully scheduled! View in the
-                              Production Schedule tab.
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
+                          <Button
+                            className="bg-[#3d545f] text-white hover:bg-[#3d545f]/90 w-full"
+                            onClick={handleSendToProduction}
+                            disabled={
+                              isGenerating ||
+                              !selectedPlatform ||
+                              !selectedTime ||
+                              selectedDays.length === 0
+                            }
+                          >
+                            {isGenerating ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Scheduling...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send to Production
+                              </>
+                            )}
+                          </Button>
+
+                          {schedulingSuccess && (
+                            <div className="bg-green-50 border border-green-200 rounded-md p-3 mt-4 flex items-center">
+                              <Check className="h-5 w-5 text-green-500 mr-2" />
+                              <p className="text-green-700">
+                                Content successfully scheduled! View in the
+                                Production Schedule tab.
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
 
                   <div className="space-y-4">
                     {queueItems
@@ -838,9 +840,9 @@ export function ContentGenerationQueue() {
                                   items.map((i) =>
                                     i.id === item.id
                                       ? {
-                                          ...i,
-                                          generatedContent: e.target.value,
-                                        }
+                                        ...i,
+                                        generatedContent: e.target.value,
+                                      }
                                       : i
                                   )
                                 );

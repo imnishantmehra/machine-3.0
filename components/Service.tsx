@@ -1,7 +1,8 @@
 import axios, { AxiosResponse } from "axios";
 
-const API_BASE_URL =
-  "https://ed9f-2405-201-3009-d013-a967-7471-e9f0-a967.ngrok-free.app";
+const API_BASE_URL = "https://7c91-2405-201-3009-d013-c5f8-c2b5-50f1-6104.ngrok-free.app";
+
+// const API_BASE_URL = "https://multiagent-933293844713.us-central1.run.app";
 
 /**
  * Generic service for making API calls
@@ -422,6 +423,7 @@ export interface AnalyzeTrendsInput {
   campaign_id: string;
   urls: string[];
   query: string;
+  description: string;
   keywords: string[];
   type?: "keyword" | "url" | "trending";
   depth: number;
@@ -480,6 +482,7 @@ export const analyzeTrends = async ({
   campaign_id,
   urls = [],
   query = "",
+  description = "",
   keywords = [],
   type = "keyword",
   depth = 3,
@@ -506,6 +509,7 @@ export const analyzeTrends = async ({
       campaign_id,
       urls,
       query,
+      description,
       keywords,
       type,
       depth,
@@ -808,103 +812,150 @@ export const generateContent = async ({
   }
 };
 
+export const getScheduledPosts = async () => {
+  try {
+    const endpoint = "get_scheduled_posts";
+
+    const response = await Service(
+      endpoint,
+      "GET",
+      undefined,
+      undefined,
+      false
+    );
+
+    console.log("getScheduledPosts", response);
+
+    if (response?.status === "success") {
+      return {
+        status: "success",
+        message: response,
+      };
+    } else {
+      console.error("Analyze failed:", response?.message || response?.error);
+      return {
+        status: "error",
+        message:
+          response?.message ||
+          response?.error ||
+          "campaigns couldn't be fetched",
+      };
+    }
+  } catch (error) {
+    console.error("Error during analyze:", error);
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unexpected error occurred during analysis.",
+    };
+  }
+};
+
+export const generateIdeas = async () => {
+  try {
+    const endpoint = "generate-ideas";
+
+    const dataRaw = localStorage.getItem("contentGenPayload") || "{}";
+    const textData = localStorage.getItem("text") || "";
+
+    const data = JSON.parse(dataRaw);
+
+    // Format: "Topic A", "Topic B"
+    const formattedTopics = (Array.isArray(data.keywords) ?
+      data.keywords.map(t => `"${t}"`).join(" ,") : "");
+
+    // Format: "\"Your post here\""
+    const formattedPost = `"${textData}"`;
+
+    // Format: Monday, Tuesday
+    const formattedDays = Array.isArray(data.activeDays) ?
+      data.activeDays.join(", ") : "";
+
+    const formBody = new URLSearchParams();
+    formBody.append("topics", formattedTopics);
+    formBody.append("posts", formattedPost);
+    formBody.append("days", formattedDays);
+
+    const response = await fetch(`${API_BASE_URL}/generate-ideas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+      },
+      body: formBody.toString()
+    });
+
+    const result = await response.json();
+
+    if (result?.status === "success") {
+      return {
+        status: "success",
+        message: result
+      };
+    } else {
+      console.error("Analyze failed:", result?.message || result?.error);
+      return {
+        status: "error",
+        message: result?.message || result?.error || "Unexpected analyze response",
+      };
+    }
+  } catch (error) {
+    console.error("Error during analyze:", error);
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unexpected error occurred during analysis.",
+    };
+  }
+};
+
 export const generateContentAPI = async () => {
   try {
     const endpoint = "generate_content";
 
     // Retrieve data from localStorage
-    const payloadData = localStorage.getItem("contentGenPayload");
-    const payloadTextData = localStorage.getItem("text");
+    // let payloadData = localStorage.getItem("contentGenPayload");
+    let payloadData = localStorage.getItem("contentGenPayload");
+    let payloadTextData = localStorage.getItem("text");
 
-    // Parse JSON data from localStorage
-    let parsedPayload = {};
-    if (typeof payloadData === "string") {
-      try {
-        parsedPayload = JSON.parse(payloadData);
-      } catch (e) {
-        console.error("Error parsing contentGenPayload:", e);
-      }
+    let newPayloadData;
+    let newPayloadTextData;
+
+    if (payloadData && payloadTextData) {
+      newPayloadData = JSON.parse(payloadData);
+      newPayloadTextData = JSON.parse(payloadTextData);
     }
 
-    console.log("Parsed Payload:", parsedPayload); // Debug payload
-    console.log("Text Data:", payloadTextData); // Debug text data
+    // Dynamically create the payload from the data
+    const payload = {
+      platforms: newPayloadData?.activePlatforms.join(", "),
+      feature_weight: newPayloadData.featureWeight || 0.1,
+      syntactic_patterns: newPayloadData.syntacticPatterns || false,
+      sample_text: newPayloadTextData || "Concise", // Default to "Concise" if no text is provided
+      complexity_level: newPayloadData.complexityLevel || "medium",
+      topics: newPayloadData.ideas.join(", "), // Concatenate ideas into a single string
+      configuration_preset: newPayloadData.configurationPreset || "balanced",
+      author: newPayloadData.author || "Ernest Hemingway",  // Use default author if not available
+      rhetorical_devices: newPayloadData.rhetoricalDevices || false,
+      text: payloadTextData || "", // Include the provided text data
+      max_tokens: newPayloadData.maxTokens || 500,
+      sample_size: newPayloadData.sampleSize || 10,
+      days: newPayloadData.activeDays.join(", "), // Join active days with commas
+      lexical_features: newPayloadData.lexicalFeatures || false,
+      structural_elements: newPayloadData.structuralElements || false,
+      creativity_level: newPayloadData.creativityLevel || 0.1,
+      semantic_characteristics: newPayloadData.semanticCharacteristics || false
+    };
 
-    const formParams = new URLSearchParams();
-
-    // Use trendingTopic if available, else keywords, else fallback
-    let topicsSource;
-    if (
-      parsedPayload.trendingTopic &&
-      Array.isArray(parsedPayload.trendingTopic) &&
-      parsedPayload.trendingTopic.length > 0
-    ) {
-      topicsSource = parsedPayload.trendingTopic.join(",");
-    } else if (
-      parsedPayload.keywords &&
-      Array.isArray(parsedPayload.keywords) &&
-      parsedPayload.keywords.length > 0
-    ) {
-      topicsSource = parsedPayload.keywords.join(",");
-    } else {
-      topicsSource = "social media trends"; // Meaningful fallback
-    }
-
-    formParams.append("topics", topicsSource);
-    console.log("Topics Sent:", topicsSource); // Debug topics
-
-    // Use trendingTopic for text if available, else payloadTextData, else fallback
-    let textSource = null; // Initialize to null
-    if (
-      parsedPayload.trendingTopic &&
-      Array.isArray(parsedPayload.trendingTopic) &&
-      parsedPayload.trendingTopic.length > 0
-    ) {
-      textSource = parsedPayload.trendingTopic.join(" "); // Join with spaces for text
-    } else if (payloadTextData && typeof payloadTextData === "string") {
-      try {
-        const parsedText = JSON.parse(payloadTextData);
-        textSource =
-          typeof parsedText === "string" ? parsedText : payloadTextData; // Use parsed text if string, else raw
-      } catch (e) {
-        textSource = payloadTextData; // Use raw string if parsing fails
-        console.warn("Failed to parse payloadTextData, using raw string:", e);
-      }
-    }
-
-    // Apply fallback if textSource is still null or not a string
-    if (!textSource || typeof textSource !== "string") {
-      textSource = "Generate content based on current social media trends."; // Meaningful fallback
-    }
-
-    formParams.append("text", textSource);
-    formParams.append("sample_text", textSource); // Same as text for consistency
-    console.log("Text Sent:", textSource); // Debug text
-
-    // Platforms
-    formParams.append(
-      "platforms",
-      Array.isArray(parsedPayload.activePlatforms) &&
-        parsedPayload.activePlatforms.length > 0
-        ? parsedPayload.activePlatforms.join(",")
-        : "Facebook"
-    );
-
-    // Days
-    formParams.append(
-      "days",
-      Array.isArray(parsedPayload.activeDays) &&
-        parsedPayload.activeDays.length > 0
-        ? parsedPayload.activeDays.join(",")
-        : "Monday"
-    );
-
-    // Author
-    formParams.append("author", parsedPayload.author || "");
-
+    // Sending the request to the API
     const response = await Service(
       endpoint,
       "POST",
-      formParams,
+      payload,
       undefined,
       true
     );
@@ -1194,5 +1245,437 @@ export const storeOpenAIKey = async (apiKey: string): Promise<any> => {
       success: false,
       message: error?.detail?.[0]?.msg || "Failed to store OpenAI API key",
     };
+  }
+};
+
+
+// MLLM code:
+/**
+ * Call the /extract_content endpoint
+ * @param file - File to upload
+ * @param week - Week parameter
+ * @param days - Days parameter
+ */
+export const extractContent = async (
+  file: File,
+  week: number,
+  days: string
+): Promise<any> => {
+  const endpoint = "extract_content";
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("week", week.toString());
+  formData.append("days", days);
+
+  return await Service(endpoint, "POST", formData);
+};
+
+/**
+ * Call the /generate_custom_scripts endpoint
+ * @param file - File to upload
+ * @param weeks - Weeks parameter
+ * @param days - Days parameter
+ * @param platformPosts - Object representing platform posts (e.g., { instagram: 1 })
+ */
+export const generateCustomScripts = async (
+  file: File,
+  weeks: number,
+  days: string[],
+  platformPosts: { [key: string]: number }
+): Promise<any> => {
+  const endpoint = "generate_custom_scripts_v2";
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const queryParams = {
+    weeks: weeks.toString(),
+    days: days.join(","),
+    platform_posts: Object.entries(platformPosts)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(","),
+  };
+
+  return await Service(endpoint, "POST", formData, queryParams);
+};
+
+(async () => {
+  try {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+
+    fileInput.onchange = async (event: Event) => {
+      const file = (event.target as HTMLInputElement)?.files?.[0];
+      if (!file) {
+        console.error("No file selected!");
+        return;
+      }
+
+      const weeks = Number(prompt("Enter the number of weeks:", "1"));
+      const days = prompt("Enter the days (comma-separated):", "Monday,Tuesday")
+        ?.split(",")
+        .map((day) => day.trim()) || ["Monday"];
+      const platformPosts = prompt(
+        'Enter platform posts as JSON (e.g., {"instagram": 1}):',
+        '{"instagram": 1}'
+      );
+      const platformPostsObj = platformPosts ? JSON.parse(platformPosts) : {};
+
+      const extractedContent = await extractContent(file, weeks, days[0]);
+
+      const customScripts = await generateCustomScripts(
+        file,
+        weeks,
+        days,
+        platformPostsObj
+      );
+    };
+
+    fileInput.click();
+  } catch (error) {
+    console.error("Error during API calls:", error);
+  }
+})();
+
+/**
+ * Call the /regenerate_script_v1 endpoint
+ * @param params - Object containing content, query, and platform
+ */
+
+export const regenerateScript = async ({
+  subTopic,
+  modifications,
+  platform,
+}: {
+  subTopic: string;
+  modifications: string;
+  platform: string;
+}): Promise<any> => {
+  try {
+    const endpoint = "regenerate_script_v1";
+
+    const timestamp = new Date().getTime().toString();
+    const cleanedContent = decodeURIComponent(subTopic);
+
+    const queryParams: Record<string, string> = {
+      content: cleanedContent,
+      query: modifications,
+      platform,
+      timestamp,
+    };
+
+    const response = await Service(endpoint, "PUT", {}, queryParams);
+
+    if (response?.status === "success") {
+      const decodedContent =
+        typeof response.content === "object"
+          ? response.content.content || ""
+          : response.content || "";
+
+      return { ...response, content: decodedContent };
+    } else {
+      console.error("Failed to regenerate script:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during script regeneration:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /regenerate_content endpoint
+ * @param week_content - The week_content to regenerate
+ */
+export const regenerateContent = async (content: string): Promise<any> => {
+  try {
+    const endpoint = "regenerate_content";
+
+    const timestamp = new Date().getTime().toString();
+
+    const cleanedContent = decodeURIComponent(content);
+
+    const queryParams: Record<string, string> = {
+      week_content: cleanedContent,
+      timestamp,
+    };
+
+    const response = await Service(endpoint, "POST", {}, queryParams);
+
+    if (response?.status === "success") {
+      if (typeof response.week_content === "string") {
+        const decodedContent = decodeURIComponent(response.week_content);
+        return { ...response, week_content: decodedContent };
+      }
+    } else {
+      console.error("Failed to regenerate script:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during script regeneration:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /regenerate_subcontent endpoint
+ * @param subcontent - The subcontent to regenerate
+ */
+export const regenerateSubContent = async (content: string): Promise<any> => {
+  try {
+    const endpoint = "regenerate_subcontent";
+
+    const timestamp = new Date().getTime().toString();
+
+    const cleanedContent = decodeURIComponent(content);
+
+    const queryParams: Record<string, string> = {
+      subcontent: cleanedContent,
+      timestamp,
+    };
+
+    const response = await Service(endpoint, "POST", {}, queryParams);
+
+    if (response?.status === "success") {
+      if (typeof response.subcontent === "string") {
+        const decodedContent = decodeURIComponent(response.subcontent);
+        return { ...response, subcontent: decodedContent };
+      }
+    } else {
+      console.error("Failed to regenerate script:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during script regeneration:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /config/${agent_name}_agent endpoint
+ * @param Role
+ * @param goal
+ * @param backstory
+ */
+export const plateformScriptAgent = async (
+  agent_name: string
+): Promise<any> => {
+  try {
+    const endpoint = `config/${agent_name}_agent`;
+    const response = await Service(endpoint, "GET", {});
+
+    return response.current;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        `Error during script regeneration for ${agent_name}:`,
+        error.message
+      );
+    } else {
+      console.error(
+        `Unknown error during script regeneration for ${agent_name}:`,
+        error
+      );
+    }
+    return null;
+  }
+};
+
+/**
+ * Call the /config/${agent_name}_task endpoint
+ * @param Role
+ * @param goal
+ * @param backstory
+ */
+export const plateformScriptTask = async (agent_name: string): Promise<any> => {
+  try {
+    const endpoint = `config/${agent_name}_task`;
+    const response = await Service(endpoint, "GET", {});
+
+    return response.current;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        `Error during script regeneration for ${agent_name}:`,
+        error.message
+      );
+    } else {
+      console.error(
+        `Unknown error during script regeneration for ${agent_name}:`,
+        error
+      );
+    }
+    return null;
+  }
+};
+
+/**
+ * Call the /regenrate_subcontent_task endpoint
+ * @param params - Object containing agentName, description, and expectedOutput
+ */
+
+export const regenerateContentTask = async ({
+  agentName,
+  description,
+  expectedOutput,
+}: {
+  agentName: string;
+  description: string;
+  expectedOutput: string;
+}): Promise<any> => {
+  try {
+    const endpoint = `tasks/${agentName}_task`;
+
+    const payload = {
+      description,
+      expected_output: expectedOutput,
+    };
+
+    const response = await Service(endpoint, "PUT", payload, {});
+
+    if (response?.status === "success") {
+      return response;
+    } else {
+      console.error("Failed to regenerate subcontent:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during subcontent regeneration:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /regenrate_subcontent_agent endpoint
+ * @param params - Object containing agentName, role, goal, and backstory
+ */
+
+export const regenerateContentAgent = async ({
+  agentName,
+  role,
+  goal,
+  backstory,
+}: {
+  agentName: string;
+  role: string;
+  goal: string;
+  backstory: string;
+}): Promise<any> => {
+  try {
+    const endpoint = `agents/${agentName}_agent`;
+
+    const payload = {
+      role,
+      goal,
+      backstory,
+    };
+
+    const response = await Service(endpoint, "PUT", payload, {});
+
+    if (response?.status === "success") {
+      return response;
+    } else {
+      console.error("Failed to regenerate subcontent:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during subcontent agent regeneration:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /generate_image endpoint
+ * @param params - Object containing content, query, and platform
+ */
+export const generateImage = async ({
+  subTopic,
+  modifications,
+}: {
+  subTopic: string;
+  modifications: string;
+}): Promise<any> => {
+  try {
+    const endpoint = "generate_image";
+
+    const timestamp = new Date().getTime().toString();
+    const cleanedContent = decodeURIComponent(subTopic);
+
+    const queryParams: Record<string, string> = {
+      content: cleanedContent,
+      query: modifications,
+      timestamp,
+    };
+
+    const response = await Service(endpoint, "POST", {}, queryParams);
+
+    if (response?.status === "success") {
+      return response;
+    } else {
+      console.error("Failed to generate image:", response?.message);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error during image generation:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /content/schedule-time endpoint
+ * @param content - The text content to be scheduled
+ * @param newTime - The new time for scheduling
+ */
+export const scheduleTime = async ({
+  newTime,
+  content,
+}: {
+  newTime: string;
+  content: string;
+}): Promise<any> => {
+  try {
+    const encodedContent = encodeURIComponent(content);
+
+    const endpoint = `content/schedule-time?content=${encodedContent}`;
+    const body = {
+      new_time: newTime,
+    };
+
+    const response = await Service(endpoint, "PATCH", body);
+    return response;
+  } catch (error) {
+    console.error("Error scheduling content:", error);
+    return null;
+  }
+};
+
+/**
+ * Call the /content/schedule-time endpoint
+ * @param content - The text content to be scheduled
+ * @param newTime - The new time for scheduling
+ */
+export const duplicateScheduleTime = async ({
+  source_week,
+  source_day,
+  platform,
+}: {
+  source_week: number;
+  source_day: string;
+  platform: string;
+}): Promise<any> => {
+  try {
+    const endpoint = `duplicate-schedule-times`;
+
+    const body = {
+      source_week,
+      source_day,
+      platform,
+    };
+
+    const response = await Service(endpoint, "POST", body);
+    return response;
+  } catch (error) {
+    console.error("Error scheduling content:", error);
+    return null;
   }
 };

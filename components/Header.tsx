@@ -46,15 +46,18 @@ export function Header() {
         </Link>
         <nav>
           <ul className="flex space-x-4">
-            {["Menu Item 1", "Menu Item 2", "Menu Item 3", "Menu Item 4"].map(
-              (item, index) => (
-                <li key={index}>
-                  <Link href="#" className="text-gray-600 hover:text-gray-900">
-                    {item}
-                  </Link>
-                </li>
-              )
-            )}
+            <li>
+              <Link href="/menu1" className="text-gray-600 hover:text-gray-900">
+                Menu Item 1
+              </Link>
+            </li>
+            {["Menu Item 2", "Menu Item 3", "Menu Item 4"].map((item, index) => (
+              <li key={index}>
+                <Link href="#" className="text-gray-600 hover:text-gray-900">
+                  {item}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
       </div>
@@ -71,9 +74,6 @@ export function Header() {
           {isLoggedIn ? (
             <>
               <DropdownMenuItem>
-                {/* <Link href="/account-settings" className="w-full">
-                  My Account Settings
-                </Link> */}
                 <Link href="/account-settings" className="w-full">
                   My Account Settings
                 </Link>
