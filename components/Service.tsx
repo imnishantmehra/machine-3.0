@@ -112,6 +112,38 @@ export const signupUser = async ({
   }
 };
 
+export const deletePostById = async (id: string): Promise<any> => {
+  try {
+    const endpoint = `posts/${id}`;
+
+    const response = await Service(
+      endpoint,
+      "DELETE",
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    return {
+      status: "success",
+      message: response
+    };
+  } catch (error: any) {
+    console.error("Error during deletion:", error);
+
+    const errorMessage =
+      error?.response?.data?.detail ||
+      error?.message ||
+      "An unexpected error occurred. Please try again.";
+
+    return {
+      status: "error",
+      message: errorMessage,
+    };
+  }
+};
+
+
 export const verifyEmail = async ({
   email,
   otp_code,

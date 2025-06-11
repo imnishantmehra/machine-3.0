@@ -46,6 +46,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle, // Use AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 interface ContentCreationFlowProps {
   selectedItems: Array<{
@@ -65,6 +66,7 @@ export function ContentCreationFlow({
   const [showTime, setShowTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [contentIdeas, setContentIdeas] = useState([]);
+  const [defaultPosts, setDefaultPosts] = useState("3");
   const [ideas, setIdeas] = useState([]);
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const [regeneratingContent, setRegeneratingContent] = useState<string | null>(
@@ -429,6 +431,22 @@ export function ContentCreationFlow({
 
             {currentStep === 1 && (
               <div className="space-y-6">
+                <div >
+                  <h3 className="text-[1.1rem] font-semibold mb-1">
+                    Default Posts per Platform
+                  </h3>
+                  <Input
+                    type="number"
+                    id="defaultPosts"
+                    value={defaultPosts}
+                    onChange={(e) => {
+                      const value = e.target.value.slice(0, 2);
+                      setDefaultPosts(value);
+                    }}
+                    className="w-full"
+                    max="99"
+                  />
+                </div>
                 <div>
                   <h3 className="text-[1.1rem] font-semibold mb-2">
                     Active Days
