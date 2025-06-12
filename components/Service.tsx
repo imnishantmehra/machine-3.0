@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 
-const API_BASE_URL = "https://7c91-2405-201-3009-d013-c5f8-c2b5-50f1-6104.ngrok-free.app";
+const API_BASE_URL = "https://f432-2405-201-3009-d013-bc00-463e-b646-e9bb.ngrok-free.app";
 
 // const API_BASE_URL = "https://multiagent-933293844713.us-central1.run.app";
 
@@ -965,6 +965,7 @@ export const generateContentAPI = async () => {
     // Dynamically create the payload from the data
     const payload = {
       platforms: newPayloadData?.activePlatforms.join(", "),
+      no_of_posts_per_day: parseInt(newPayloadData?.defaultPosts) || 3,
       feature_weight: newPayloadData.featureWeight || 0.1,
       syntactic_patterns: newPayloadData.syntacticPatterns || false,
       sample_text: newPayloadTextData || "Concise", // Default to "Concise" if no text is provided

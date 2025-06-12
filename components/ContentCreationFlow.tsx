@@ -285,6 +285,11 @@ export function ContentCreationFlow({
   }, [activePlatforms]);
 
   useEffect(() => {
+    updateContentGenPayload({ defaultPosts });
+  }, [defaultPosts]);
+
+
+  useEffect(() => {
     //useeffet commented
   }, [currentStep, contentIdeas.length]);
 

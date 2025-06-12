@@ -136,6 +136,7 @@ export function CampaignSettings({
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [showCampaignBuildingMessage, setShowCampaignBuildingMessage] = useState("");
 
   // Advanced settings with enforced false defaults for toggles
   const [extractionSettings, setExtractionSettings] = useState({
@@ -515,6 +516,13 @@ export function CampaignSettings({
   };
 
   const handleBuildCampaign = async () => {
+    console.log("keywords", keywords);
+    console.log("urls", urls);
+    if (keywords.length === 0 && urls.length === 0) {
+      alert("Enter either url or keyword")
+      return
+    }
+
     setIsBuilding(true);
     try {
       const keywordArray = keywords;
@@ -544,7 +552,7 @@ export function CampaignSettings({
         pass_threshold: modelingSettings.passThreshold,
       };
 
-      console.log("payload", payload);
+      setShowCampaignBuildingMessage("The campaign is being built; it will take a while.In the meantime, you can continue with the other tasks.")
 
       let response;
       if (trendingKeyword.trim()) {
@@ -689,6 +697,7 @@ export function CampaignSettings({
             : "An unexpected error occurred.",
       });
     } finally {
+      setShowCampaignBuildingMessage("")
       setIsBuilding(false);
     }
   };
@@ -1550,11 +1559,19 @@ export function CampaignSettings({
               )}
             </Button>
           </div>
-          <div className="flex justify-end w-full">
-            <span className="text-xs text-gray-500 mr-[1px]">
-              Building a Base starts your plan
-            </span>
+          <div className="w-full flex justify-end">
+            <div className="text-right">
+              <p className="text-xs text-gray-500 mb-1">
+                Building a base starts your plan.
+              </p>
+              {showCampaignBuildingMessage && (
+                <p className="text-sm text-blue-600 animate-pulse">
+                  The campaign is being built; it will take a while. In the meantime, you can continue with the other tasks.
+                </p>
+              )}
+            </div>
           </div>
+
         </CardFooter>
       </Card>
 

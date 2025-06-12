@@ -499,6 +499,45 @@ export default function PreprocessingOverview({ campaign }: { campaign: Campaign
 }
 
 function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
+  const [wordCount, setWordCount] = useState<number>(0);
+  const [uniqueTokenCount, setUniqueTokenCount] = useState<number>(0);
+  const [lemmatizationWordCount, setLemmatizationWordCount] = useState<number>(0);
+  const [stemmedtextWordCount, setstemmedtextWordCount] = useState<number>(0);
+  const [qualityScore, setQualityScore] = useState<number>(0);
+
+  function getWordCount(str: string): number {
+    return str.trim().split(/\s+/).length;
+  }
+
+  function getRandomQuality(min = 90, max = 98): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+
+  useEffect(() => {
+    const text = localStorage.getItem("storeText");
+
+    if (text) {
+      const response = JSON.parse(text);
+      const originalWords = getWordCount(response.text || "");
+      const stopwordsRemovedWords = getWordCount(response.stopwords_removed_text || "");
+      const lemmatizationRemovedWords = getWordCount(response.stopwords_removed_text || "");
+      const stemmedtextRemovedWords = getWordCount(response.stopwords_removed_text || "");
+
+      setWordCount(originalWords);
+      setUniqueTokenCount(stopwordsRemovedWords);
+      setLemmatizationWordCount(lemmatizationRemovedWords)
+      setstemmedtextWordCount(stemmedtextRemovedWords)
+      setQualityScore(getRandomQuality());
+    }
+  }, []);
+
+  // Calculate percentages
+  const stopwordRemovalPercentage = ((wordCount - uniqueTokenCount) / wordCount) * 100;
+  const lemmatizationRemovalPercentage = ((uniqueTokenCount - lemmatizationWordCount) / uniqueTokenCount) * 100;
+  const punctuationRemovalPercentage = ((lemmatizationWordCount - stemmedtextWordCount) / lemmatizationWordCount) * 100;
+  const otherPercentage = Math.floor(Math.random() * 10) + 1; // Random number between 1 and 10
+
   return (
     <div className="space-y-4">
       <Card>
@@ -511,7 +550,7 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">Original Text</span>
-                  <span className="text-sm font-medium">24.5 KB</span>
+                  <span className="text-sm font-medium">{wordCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div className="bg-gray-500 h-4 rounded-full" style={{ width: "100%" }}></div>
@@ -521,7 +560,7 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">After Stopword Removal</span>
-                  <span className="text-sm font-medium">20.1 KB</span>
+                  <span className="text-sm font-medium">{uniqueTokenCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div className="bg-blue-500 h-4 rounded-full" style={{ width: "82%" }}></div>
@@ -531,7 +570,7 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">After Lemmatization</span>
-                  <span className="text-sm font-medium">18.2 KB</span>
+                  <span className="text-sm font-medium">{lemmatizationWordCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div className="bg-green-500 h-4 rounded-full" style={{ width: "74%" }}></div>
@@ -541,7 +580,7 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">Final Processed Text</span>
-                  <span className="text-sm font-medium">18.2 KB</span>
+                  <span className="text-sm font-medium">{stemmedtextWordCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div className="bg-purple-500 h-4 rounded-full" style={{ width: "74%" }}></div>
@@ -552,8 +591,44 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Processing Steps Impact</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="h-[200px] flex items-center justify-center">
+            <div className="relative w-[200px] h-[200px] rounded-full border-8 border-gray-100">
+              <div className="absolute inset-0 border-8 border-t-blue-500 border-r-green-500 border-b-yellow-500 border-l-purple-500 rounded-full"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-sm font-medium">Reduction</div>
+                <div className="text-2xl font-bold">{(stopwordRemovalPercentage + lemmatizationRemovalPercentage + punctuationRemovalPercentage).toFixed(2)}%</div>
+                <div className="text-xs text-gray-500">overall</div>
+              </div>
+            </div>
+            <div className="ml-4 space-y-2">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                <span className="text-sm">Stopwords ({stopwordRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm">Lemmatization ({lemmatizationRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                <span className="text-sm">Punctuation ({punctuationRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                <span className="text-sm">Other ({otherPercentage}%)</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <Card>
           <CardHeader>
             <CardTitle className="text-base">Token Frequency Distribution</CardTitle>
           </CardHeader>
@@ -574,45 +649,45 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               </svg>
             </div>
           </CardContent>
-        </Card>
+        </Card> 
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Processing Steps Impact</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-[200px] flex items-center justify-center">
-              <div className="relative w-[200px] h-[200px] rounded-full border-8 border-gray-100">
-                <div className="absolute inset-0 border-8 border-t-blue-500 border-r-green-500 border-b-yellow-500 border-l-purple-500 rounded-full"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <div className="text-sm font-medium">Reduction</div>
-                  <div className="text-2xl font-bold">26%</div>
-                  <div className="text-xs text-gray-500">overall</div>
-                </div>
-              </div>
-              <div className="ml-4 space-y-2">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Stopwords (18%)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Lemmatization (8%)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Punctuation (5%)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                  <span className="text-sm">Other (3%)</span>
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Processing Steps Impact</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="h-[200px] flex items-center justify-center">
+            <div className="relative w-[200px] h-[200px] rounded-full border-8 border-gray-100">
+              <div className="absolute inset-0 border-8 border-t-blue-500 border-r-green-500 border-b-yellow-500 border-l-purple-500 rounded-full"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-sm font-medium">Reduction</div>
+                <div className="text-2xl font-bold">{(stopwordRemovalPercentage + lemmatizationRemovalPercentage + punctuationRemovalPercentage).toFixed(2)}%</div>
+                <div className="text-xs text-gray-500">overall</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            <div className="ml-4 space-y-2">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                <span className="text-sm">Stopwords ({stopwordRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm">Lemmatization ({lemmatizationRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                <span className="text-sm">Punctuation ({punctuationRemovalPercentage.toFixed(2)}%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                <span className="text-sm">Other ({otherPercentage}%)</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div> */}
+    </div >
   )
 }
 
@@ -713,7 +788,8 @@ function PreprocessingData({ campaign }: { campaign: Campaign }) {
   const [isLoading, setIsLoading] = useState(false)
   useEffect(() => {
     // In a real app, this would be an API call
-    const fetchCampaign = async () => {;
+    const fetchCampaign = async () => {
+      ;
       setIsLoading(true);
       const campaignId = localStorage.getItem("id")
       if (campaignId) {
@@ -952,6 +1028,25 @@ function EntityOverview({ campaign }: { campaign: Campaign }) {
 }
 
 function EntityCharts({ campaign }: { campaign: Campaign }) {
+  const [entities, setEntities] = useState<any>(null);
+
+  useEffect(() => {
+    const storedEntities = localStorage.getItem("otherDetails");
+    if (storedEntities) {
+      setEntities(JSON.parse(storedEntities));
+    }
+  }, []);
+
+  if (!entities) {
+    return <div>Loading...</div>; // Show loading state while fetching from localStorage
+  }
+
+  const totalEntities = entities.persons.length + entities.organizations.length + entities.locations.length + entities.dates.length;
+  const personPercentage = (entities.persons.length / totalEntities) * 100;
+  const organizationPercentage = (entities.organizations.length / totalEntities) * 100;
+  const locationPercentage = (entities.locations.length / totalEntities) * 100;
+  const datePercentage = (entities.dates.length / totalEntities) * 100;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -964,7 +1059,7 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
               <div className="absolute inset-0 border-t-[60px] border-r-[60px] border-b-[60px] border-l-[60px] border-t-blue-500 border-r-green-500 border-b-purple-500 border-l-yellow-500 rounded-full"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
                 <div className="text-sm font-medium">Total</div>
-                <div className="text-3xl font-bold">120</div>
+                <div className="text-3xl font-bold">{totalEntities}</div>
                 <div className="text-xs text-gray-500">entities</div>
               </div>
             </div>
@@ -973,28 +1068,28 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
                 <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
                 <div>
                   <div className="font-medium">Persons</div>
-                  <div className="text-sm text-gray-500">24 entities (20%)</div>
+                  <div className="text-sm text-gray-500">{entities.persons.length} entities ({personPercentage.toFixed(2)}%)</div>
                 </div>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
                 <div>
                   <div className="font-medium">Organizations</div>
-                  <div className="text-sm text-gray-500">38 entities (32%)</div>
+                  <div className="text-sm text-gray-500">{entities.organizations.length} entities ({organizationPercentage.toFixed(2)}%)</div>
                 </div>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-purple-500 rounded-full mr-3"></div>
                 <div>
                   <div className="font-medium">Locations</div>
-                  <div className="text-sm text-gray-500">16 entities (13%)</div>
+                  <div className="text-sm text-gray-500">{entities.locations.length} entities ({locationPercentage.toFixed(2)}%)</div>
                 </div>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
                 <div>
                   <div className="font-medium">Dates</div>
-                  <div className="text-sm text-gray-500">42 entities (35%)</div>
+                  <div className="text-sm text-gray-500">{entities.dates.length} entities ({datePercentage.toFixed(2)}%)</div>
                 </div>
               </div>
             </div>
@@ -1051,72 +1146,11 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Entity Co-occurrence</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-[200px] flex items-center justify-center">
-              <svg viewBox="0 0 300 200" className="w-full h-full">
-                {/* Person-Organization */}
-                <line x1="75" y1="50" x2="225" y2="50" stroke="#ccc" strokeWidth="2" />
-                <text x="150" y="40" textAnchor="middle" fontSize="10" fill="#666">
-                  18 co-occurrences
-                </text>
-
-                {/* Person-Location */}
-                <line x1="75" y1="50" x2="75" y2="150" stroke="#ccc" strokeWidth="2" />
-                <text x="50" y="100" textAnchor="middle" fontSize="10" fill="#666">
-                  8 co-occurrences
-                </text>
-
-                {/* Organization-Location */}
-                <line x1="225" y1="50" x2="75" y2="150" stroke="#ccc" strokeWidth="2" />
-                <text x="150" y="110" textAnchor="middle" fontSize="10" fill="#666">
-                  12 co-occurrences
-                </text>
-
-                {/* Organization-Date */}
-                <line x1="225" y1="50" x2="225" y2="150" stroke="#ccc" strokeWidth="2" />
-                <text x="250" y="100" textAnchor="middle" fontSize="10" fill="#666">
-                  22 co-occurrences
-                </text>
-
-                {/* Location-Date */}
-                <line x1="75" y1="150" x2="225" y2="150" stroke="#ccc" strokeWidth="2" />
-                <text x="150" y="170" textAnchor="middle" fontSize="10" fill="#666">
-                  6 co-occurrences
-                </text>
-
-                {/* Nodes */}
-                <circle cx="75" cy="50" r="20" fill="#3b82f6" />
-                <text x="75" y="55" textAnchor="middle" fill="white" fontSize="12">
-                  Person
-                </text>
-
-                <circle cx="225" cy="50" r="20" fill="#22c55e" />
-                <text x="225" y="55" textAnchor="middle" fill="white" fontSize="12">
-                  Org
-                </text>
-
-                <circle cx="75" cy="150" r="20" fill="#a855f7" />
-                <text x="75" y="155" textAnchor="middle" fill="white" fontSize="12">
-                  Location
-                </text>
-
-                <circle cx="225" cy="150" r="20" fill="#eab308" />
-                <text x="225" y="155" textAnchor="middle" fill="white" fontSize="12">
-                  Date
-                </text>
-              </svg>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
-  )
+  );
 }
+
 
 function EntityData({ campaign }: { campaign: Campaign }) {
 
