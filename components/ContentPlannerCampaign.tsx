@@ -804,7 +804,7 @@ export function ContentPlannerCampaign({
                   <Link href={`/dashboard/campaigns/edit/${campaign.id}`}>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit d
+                      Edit
                     </Button>
                   </Link>
                   <Button
