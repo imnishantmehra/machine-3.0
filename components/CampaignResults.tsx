@@ -601,26 +601,29 @@ function PreprocessingCharts({ campaign }: { campaign: Campaign }) {
               <div className="absolute inset-0 border-8 border-t-blue-500 border-r-green-500 border-b-yellow-500 border-l-purple-500 rounded-full"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
                 <div className="text-sm font-medium">Reduction</div>
-                <div className="text-2xl font-bold">{(stopwordRemovalPercentage + lemmatizationRemovalPercentage + punctuationRemovalPercentage).toFixed(2)}%</div>
+                <div className="text-2xl font-bold">
+                  {Math.max(0, ((wordCount + uniqueTokenCount + lemmatizationWordCount + stemmedtextWordCount) / 100)).toFixed(2)}%
+                </div>
                 <div className="text-xs text-gray-500">overall</div>
               </div>
             </div>
             <div className="ml-4 space-y-2">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm">Stopwords ({stopwordRemovalPercentage.toFixed(2)}%)</span>
+                {/* <span className="text-sm">Stopwords ({stopwordRemovalPercentage.toFixed(2)}%)</span> */}
+                <span className="text-sm">Stopwords ({wordCount.toFixed(2)}%)</span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-sm">Lemmatization ({lemmatizationRemovalPercentage.toFixed(2)}%)</span>
+                <span className="text-sm">Lemmatization ({uniqueTokenCount.toFixed(2)}%)</span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <span className="text-sm">Punctuation ({punctuationRemovalPercentage.toFixed(2)}%)</span>
+                <span className="text-sm">Punctuation ({lemmatizationWordCount.toFixed(2)}%)</span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                <span className="text-sm">Other ({otherPercentage}%)</span>
+                <span className="text-sm">Other ({stemmedtextWordCount}%)</span>
               </div>
             </div>
           </div>
@@ -1047,6 +1050,12 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
   const locationPercentage = (entities.locations.length / totalEntities) * 100;
   const datePercentage = (entities.dates.length / totalEntities) * 100;
 
+  // Assuming you have confidence scores for each entity type
+  const personConfidence = entities.personsConfidence || 92; // Default value
+  const organizationConfidence = entities.organizationsConfidence || 88;
+  const locationConfidence = entities.locationsConfidence || 95;
+  const dateConfidence = entities.datesConfidence || 97;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -1097,56 +1106,60 @@ function EntityCharts({ campaign }: { campaign: Campaign }) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Entity Confidence Scores</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Persons</span>
-                  <span className="font-medium">92%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: "92%" }}></div>
-                </div>
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Entity Confidence Scores</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            {/* Persons Confidence */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Persons</span>
+                <span className="font-medium">{personConfidence.toFixed(2)}%</span>
               </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Organizations</span>
-                  <span className="font-medium">88%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-green-500 h-2.5 rounded-full" style={{ width: "88%" }}></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Locations</span>
-                  <span className="font-medium">95%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: "95%" }}></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Dates</span>
-                  <span className="font-medium">97%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: "97%" }}></div>
-                </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${personConfidence}%` }}></div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            {/* Organizations Confidence */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Organizations</span>
+                <span className="font-medium">{organizationConfidence.toFixed(2)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${organizationConfidence}%` }}></div>
+              </div>
+            </div>
+
+            {/* Locations Confidence */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Locations</span>
+                <span className="font-medium">{locationConfidence.toFixed(2)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: `${locationConfidence}%` }}></div>
+              </div>
+            </div>
+
+            {/* Dates Confidence */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Dates</span>
+                <span className="font-medium">{dateConfidence.toFixed(2)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: `${dateConfidence}%` }}></div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      {/* </div> */}
     </div>
   );
 }
