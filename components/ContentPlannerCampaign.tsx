@@ -107,7 +107,7 @@ export function ContentPlannerCampaign({
     isOpen: false,
     message: "",
   });
-  const [isSettingsMode, setIsSettingsMode] = useState(false);
+  const [isSettingsMode, setIsSettingsMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [extractionSettings, setExtractionSettings] = useState({
     webScrapingDepth: 2,
