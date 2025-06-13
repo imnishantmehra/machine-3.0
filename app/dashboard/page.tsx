@@ -848,7 +848,7 @@ export default function Dashboard() {
                                             className="w-full flex justify-between items-center p-4"
                                         >
                                             <span className="text-lg font-semibold">
-                                                Plan Settings g
+                                                Plan Settings
                                             </span>
                                             {isSettingsOpen ? (
                                                 <ChevronUp className="h-5 w-5" />

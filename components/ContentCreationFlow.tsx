@@ -47,6 +47,7 @@ import {
   AlertDialogTitle, // Use AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { ErrorDialog } from "./ErrorDialog";
 
 interface ContentCreationFlowProps {
   selectedItems: Array<{
@@ -75,7 +76,10 @@ export function ContentCreationFlow({
   // State to store the selected time
   const [selectedTime, setSelectedTime] = useState<string>('09:00');
   const [regeneratingImage, setRegeneratingImage] = useState(null);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // const [errormsg, setErrorMsg] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const [contentGenPayload, setContentGenPayload] = useState(() => {
     const stored = localStorage.getItem("contentGenPayload");
@@ -115,9 +119,13 @@ export function ContentCreationFlow({
         } else {
           // Handle the error case, optionally show a message to the user
           console.error("Failed to generate ideas:", response.message);
+          setErrorMessage(response.message || "Unexpected error occurred.");
+          setShowErrorDialog(true); // Show dialog
         }
       } catch (error) {
         console.error("Unexpected error in handleNextStep:", error);
+        setErrorMessage("Something went wrong while generating ideas.");
+        setShowErrorDialog(true); // Show dialog
       } finally {
         setIsLoading(false);
       }
@@ -130,10 +138,8 @@ export function ContentCreationFlow({
           setErrorMessage("Invalid token, Please login again.");
           return;
         }
-        if (
-          response?.status === "success" &&
-          Array.isArray(response.message)
-        ) {
+
+        if (response?.status === "success" && Array.isArray(response.message)) {
           const mappedIdeas = response.message.map((item, index) => ({
             id: item.id,
             title: item.title || "Untitled",
@@ -145,9 +151,15 @@ export function ContentCreationFlow({
 
           setContentIdeas(mappedIdeas);
           setCurrentStep((prev) => Math.min(prev + 1, 3));
+        } else {
+          console.error("Failed to generate ideas:", response.message);
+          setErrorMessage(response.message || response.message || "Unexpected error occurred.");
+          setShowErrorDialog(true); // Show dialog
         }
       } catch (e) {
-        console.log("error in generateFinalContent", e);
+        console.error("Unexpected error in handleNextStep:", e);
+        setErrorMessage("Something went wrong while generating posts.");
+        setShowErrorDialog(true); // Show dialog
       } finally {
         setIsLoading(false);
       }
@@ -900,7 +912,7 @@ export function ContentCreationFlow({
       </Card>
 
       {/* AlertDialog for Error Message */}
-      <AlertDialog
+      {/* <AlertDialog
         open={!!errorMessage}
         onOpenChange={() => setErrorMessage(null)}
       >
@@ -924,7 +936,12 @@ export function ContentCreationFlow({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
+      <ErrorDialog
+        isOpen={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        message={errorMessage || ''}
+      />
     </TooltipProvider >
   );
 }

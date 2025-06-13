@@ -1016,7 +1016,7 @@ export const generateContentAPI = async () => {
       status: "error",
       message:
         error instanceof Error
-          ? error.message
+          ? (error.message)
           : "Unexpected error occurred during content generation.",
     };
   }

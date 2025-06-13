@@ -36,6 +36,13 @@ export default function Menu1Page() {
     const [actionLoading, setActionLoading] = useState<{
         [key: number]: { regenerateContent?: boolean; regenerateImage?: boolean; delete?: boolean; scheduleTime?: boolean };
     }>({});
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentPostId, setCurrentPostId] = useState<number | null>(null);
+    const [editedContent, setEditedContent] = useState("");
+    const [editedPlatform, setEditedPlatform] = useState("");
+    const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+    const [modalContent, setModalContent] = useState<string>("");
+    const [modalTitle, setModalTitle] = useState<string>("");
 
     const getSchedulePosts = async () => {
         try {
@@ -207,132 +214,211 @@ export default function Menu1Page() {
     }
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Scheduled Posts</h1>
-
-            {loading && (
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-                </div>
-            )}
-
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
-                </div>
-            )}
-
-            {!loading && !error && scheduledPosts.length === 0 && (
-                <div className="text-center text-gray-600 py-10">
-                    No scheduled posts found.
-                </div>
-            )}
-
-            {!loading && !error && scheduledPosts.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {scheduledPosts.map((post) => {
-                        // Extract the hour from the schedule_time
-                        const scheduledHour = new Date(post.schedule_time).getHours(); // Extract hour (0-23)
-                        const formattedScheduledTime = scheduledHour < 10 ? `0${scheduledHour}:00` : `${scheduledHour}:00`;
-
-                        return (
-                            <div
-                                key={post.id}
-                                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300"
+        <>
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+                        <h2 className="text-xl font-semibold mb-4">Edit Content</h2>
+                        <textarea
+                            className="w-full h-40 border border-gray-300 rounded-lg p-2 mb-4"
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setIsModalOpen(false);
+                                    setCurrentPostId(null);
+                                }}
                             >
-                                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                                    {post.title}
-                                </h2>
-                                {post.image ? (
-                                    <img
-                                        src={post.image}
-                                        alt={post.title}
-                                        className="w-full h-48 object-cover rounded-md mb-4"
-                                        onError={(e) => {
-                                            e.currentTarget.src = "/placeholder-image.jpg"; // Fallback image
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center text-gray-500">
-                                        No Image
-                                    </div>
-                                )}
-                                <p className="text-gray-600 mb-4 line-clamp-3">{post.content}</p>
-                                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                                    <span className="font-medium">Platform:</span>
-                                    <span
-                                        className={`px-2 py-1 rounded-full text-xs font-semibold ${post.platform.toLowerCase() === "twitter"
-                                            ? "bg-blue-100 text-blue-600"
-                                            : "bg-gray-100 text-gray-600"
-                                            }`}
-                                    >
-                                        {post.platform}
-                                    </span>
-                                </div>
-                                <div className="text-sm text-gray-500 mb-2">
-                                    <span className="font-medium">Scheduled:</span>{" "}
-                                    {formatDate(post.schedule_time)} {/* Display day and time */}
-                                </div>
-                                <div>
-                                    <select
-                                        id="time"
-                                        value={formattedScheduledTime} // Set the default value to the extracted hour
-                                        onChange={(e) => handleTimeChange(e, post.content)}
-                                        className="w-[180px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none bg-white text-gray-700 cursor-pointer bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]"
-                                        style={{
-                                            backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="gray" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>')`,
-                                        }}
-                                    >
-                                        {timeOptions.map((time) => (
-                                            <option key={time} value={time}>
-                                                {time}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handleRegenerateContent(post.id, post.content, post.platform)
-                                        }
-                                        disabled={actionLoading[post.id]?.regenerateContent}
-                                    >
-                                        {actionLoading[post.id]?.regenerateContent ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 mr-2"></div>
-                                        ) : null}
-                                        Regenerate Content
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleRegenerateImage(post.id, post.content)}
-                                        disabled={actionLoading[post.id]?.regenerateImage}
-                                    >
-                                        {actionLoading[post.id]?.regenerateImage ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 mr-2"></div>
-                                        ) : null}
-                                        Regenerate Image
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => deletePost(post.id)}
-                                        disabled={actionLoading[post.id]?.delete}
-                                    >
-                                        {actionLoading[post.id]?.delete ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-red-500 mr-2"></div>
-                                        ) : null}
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-                        );
-                    })}
-
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    if (currentPostId !== null) {
+                                        handleRegenerateContent(currentPostId, editedContent, editedPlatform);
+                                    }
+                                    setIsModalOpen(false);
+                                    setCurrentPostId(null);
+                                }}
+                            >
+                                Submit
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
-        </div>
+
+            {isContentModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg max-h-[80vh] overflow-auto">
+                        <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
+                        <p className="whitespace-pre-wrap text-gray-800">{modalContent}</p>
+                        <div className="flex justify-end mt-6">
+                            <Button onClick={() => setIsContentModalOpen(false)}>Close</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            <div className="min-h-screen p-6 bg-gray-100">
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">Scheduled Posts</h1>
+
+                {loading && (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && scheduledPosts.length === 0 && (
+                    <div className="text-center text-gray-600 py-10">
+                        No scheduled posts found.
+                    </div>
+                )}
+
+                {!loading && !error && scheduledPosts.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {scheduledPosts
+                            .slice() // make a shallow copy to avoid mutating state
+                            .sort((a, b) => b.id - a.id)
+                            .map((post) => {
+                                // Extract the hour from the schedule_time
+                                const scheduledHour = new Date(post.schedule_time).getHours(); // Extract hour (0-23)
+                                const formattedScheduledTime = scheduledHour < 10 ? `0${scheduledHour}:00` : `${scheduledHour}:00`;
+
+                                return (
+                                    <div
+                                        key={post.id}
+                                        className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300"
+                                    >
+                                        <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                            {post.title}
+                                        </h2>
+                                        {post.image_url ? (
+                                            <img
+                                                src={post.image_url}
+                                                alt={post.title}
+                                                className="w-full h-48 object-cover rounded-md mb-4"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = "/placeholder-image.jpg"; // Fallback image
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center text-gray-500">
+                                                No Image
+                                            </div>
+                                        )}
+                                        {/* <p className="text-gray-600 mb-4">{post.content}</p> */}
+                                        <p
+                                            className="text-gray-600 mb-4 line-clamp-3 cursor-pointer hover:underline"
+                                            onClick={() => {
+                                                setModalContent(post.content);
+                                                setModalTitle(post.title);
+                                                setIsContentModalOpen(true);
+                                            }}
+                                        >
+                                            {post.content}
+                                        </p>
+                                        <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                                            <span className="font-medium">Platform:</span>
+                                            <span
+                                                className={`px-2 py-1 rounded-full text-xs font-semibold ${post.platform.toLowerCase() === "twitter"
+                                                    ? "bg-blue-100 text-blue-600"
+                                                    : "bg-gray-100 text-gray-600"
+                                                    }`}
+                                            >
+                                                {post.platform}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm text-gray-500 mb-2">
+                                            <span className="font-medium">Scheduled:</span>{" "}
+                                            {formatDate(post.schedule_time)} {/* Display day and time */}
+                                        </div>
+                                        <div>
+                                            <select
+                                                id="time"
+                                                value={formattedScheduledTime} // Set the default value to the extracted hour
+                                                onChange={(e) => handleTimeChange(e, post.content)}
+                                                className="w-[180px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none bg-white text-gray-700 cursor-pointer bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]"
+                                                style={{
+                                                    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="gray" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>')`,
+                                                }}
+                                            >
+                                                {timeOptions.map((time) => (
+                                                    <option key={time} value={time}>
+                                                        {time}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {/* <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleRegenerateContent(post.id, post.content, post.platform)
+                                            }
+                                            disabled={actionLoading[post.id]?.regenerateContent}
+                                        >
+                                            {actionLoading[post.id]?.regenerateContent ? (
+                                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 mr-2"></div>
+                                            ) : null}
+                                            Regenerate Content
+                                        </Button> */}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setEditedContent(post.content);
+                                                    setEditedPlatform(post.platform);
+                                                    setCurrentPostId(post.id);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                disabled={actionLoading[post.id]?.regenerateContent}
+                                            >
+                                                {actionLoading[post.id]?.regenerateContent ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 mr-2"></div>
+                                                ) : null}
+                                                Regenerate Content
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleRegenerateImage(post.id, post.content)}
+                                                disabled={actionLoading[post.id]?.regenerateImage}
+                                            >
+                                                {actionLoading[post.id]?.regenerateImage ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 mr-2"></div>
+                                                ) : null}
+                                                Regenerate Image
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => deletePost(post.id)}
+                                                disabled={actionLoading[post.id]?.delete}
+                                            >
+                                                {actionLoading[post.id]?.delete ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-red-500 mr-2"></div>
+                                                ) : null}
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                    </div>
+                )}
+            </div>
+        </>
     );
 }
