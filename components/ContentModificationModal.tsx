@@ -83,6 +83,7 @@ import {
   regenerateSubContent,
   generateImage,
 } from "@/components/Service";
+import { ErrorDialog } from "./ErrorDialog";
 
 interface ContentModificationModalProps {
   isOpen: boolean;
@@ -103,6 +104,8 @@ export function ContentModificationModal({
 }: ContentModificationModalProps) {
   const [modifications, setModifications] = useState(subTopic);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setModifications(subTopic);
@@ -219,71 +222,81 @@ export function ContentModificationModal({
 
         onClose();
       } else {
-        console.error(
-          "Failed to regenerate script:",
-          regeneratedResponse?.message
-        );
+        // Handle the error case, optionally show a message to the user
+        console.error("Failed to generate ideas:", regeneratedResponse.message);
+        setErrorMessage(regeneratedResponse.message || "Unexpected error occurred.");
+        setShowErrorDialog(true); // Show dialog
       }
     } catch (error) {
       console.error("Error during script regeneration:", error);
+      setErrorMessage("Error during script regeneration.");
+      setShowErrorDialog(true); // Show dialog
     } finally {
       setIsRegenerating(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            Modify{" "}
-            {contentType === "main"
-              ? "Main Idea "
-              : contentType === "sub"
-                ? "Sub-topic"
-                : contentType === "content"
-                  ? "Content"
-                  : "Image"}
-          </DialogTitle>
-          <DialogDescription>
-            Describe the modifications you'd like to make to the{" "}
-            {contentType === "main"
-              ? "main idea"
-              : contentType === "sub"
-                ? "sub-topic"
-                : contentType}
-            .
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <Textarea
-            id="modifications"
-            // value={subTopic}
-            value={modifications}
-            onChange={(e) => setModifications(e.target.value)}
-            placeholder={`Enter your desired modifications for the ${contentType === "main"
-              ? "main idea"
-              : contentType === "sub"
-                ? "sub-topic"
-                : contentType
-              }...`}
-            className="col-span-3"
-          />
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleRegenerate}
-            type="button"
-            disabled={isRegenerating}
-          >
-            {isRegenerating ? "Regenerating..." : "Regenerate"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <ErrorDialog
+        isOpen={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        message={errorMessage || ''}
+      />
+
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              Modify{" "}
+              {contentType === "main"
+                ? "Main Idea "
+                : contentType === "sub"
+                  ? "Sub-topic"
+                  : contentType === "content"
+                    ? "Content"
+                    : "Image"}
+            </DialogTitle>
+            <DialogDescription>
+              Describe the modifications you'd like to make to the{" "}
+              {contentType === "main"
+                ? "main idea"
+                : contentType === "sub"
+                  ? "sub-topic"
+                  : contentType}
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              id="modifications"
+              // value={subTopic}
+              value={modifications}
+              onChange={(e) => setModifications(e.target.value)}
+              placeholder={`Enter your desired modifications for the ${contentType === "main"
+                ? "main idea"
+                : contentType === "sub"
+                  ? "sub-topic"
+                  : contentType
+                }...`}
+              className="col-span-3"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRegenerate}
+              type="button"
+              disabled={isRegenerating}
+            >
+              {isRegenerating ? "Regenerating..." : "Regenerate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

@@ -148,6 +148,8 @@ export function ContentPlannerCampaign({
   const formRef = useRef<HTMLDivElement>(null);
   const campaignsListRef = useRef<HTMLDivElement>(null); // Ref for the campaigns list container
   const [campaignDisplay, setCampaignDisplay] = useState<Campaign | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   // Sync settings with campaigns prop whenever campaigns change
   useEffect(() => {
@@ -175,6 +177,8 @@ export function ContentPlannerCampaign({
         }
       } catch (error) {
         console.error("Error building campaign:", error);
+        setErrorMessage("Error building campaign.");
+        setShowErrorDialog(true); // Show dialog
       } finally {
         setIsLoading(false);
       }

@@ -17,6 +17,7 @@ import {
   twitterConnect,
   wordpressConnect,
 } from "@/components/Service";
+import { ErrorDialog } from "@/components/ErrorDialog";
 
 interface PlatformConnection {
   role?: string;
@@ -61,6 +62,8 @@ export default function AccountSettings() {
   const [connections, setConnections] = useState<
     Record<string, PlatformConnection>
   >({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const handleInputChange = (
     platform: string,
@@ -160,11 +163,9 @@ export default function AccountSettings() {
         setSuccessMessage("");
       }, 4000);
     } catch (error) {
-      console.error(
-        "Error regenerating content for",
-        platformData.platform,
-        error
-      );
+      console.error("Unexpected error in regeneration", error);
+      setErrorMessage("Unexpected error in regeneration.");
+      setShowErrorDialog(true); // Show dialog
     } finally {
       setSavingPlatform(null);
     }
@@ -182,7 +183,9 @@ export default function AccountSettings() {
     try {
       await linkedinConnect();
     } catch (e) {
-      console.error("LinkedIn connection failed:", e);
+      console.error("Unexpected error in handleNextStep:", error);
+      setErrorMessage("Something went wrong while generating ideas.");
+      setShowErrorDialog(true); // Show dialog
     } finally {
       setLoading(false);
     }
@@ -487,6 +490,13 @@ export default function AccountSettings() {
               ))}
             </div>
           </div>
+        </div>
+        <div>
+          <ErrorDialog
+            isOpen={showErrorDialog}
+            onClose={() => setShowErrorDialog(false)}
+            message={errorMessage || ''}
+          />
         </div>
       </main>
     </div>

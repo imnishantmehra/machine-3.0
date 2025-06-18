@@ -37,6 +37,7 @@ export function TrendingOnX({
     try {
       parsedPayload = JSON.parse(existingPayload);
     } catch (e) {
+      
       console.error("Failed to parse contentGenPayload:", e);
     }
 
@@ -66,8 +67,8 @@ export function TrendingOnX({
 
   const filteredTopics = searchQuery
     ? trendingContent.filter((topic) =>
-        topic.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      topic.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : trendingContent;
 
   return (
@@ -99,11 +100,10 @@ export function TrendingOnX({
             {filteredTopics.map((topic, index) => (
               <div
                 key={index}
-                className={`flex items-center px-3 py-1 rounded-full max-w-lg ${
-                  selectedTopics.includes(topic)
+                className={`flex items-center px-3 py-1 rounded-full max-w-lg ${selectedTopics.includes(topic)
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-secondary-foreground"
-                }`}
+                  }`}
                 onClick={() => handleToggleTopic(topic)} // Toggle selection on click
                 style={{ cursor: "pointer" }}
               >

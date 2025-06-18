@@ -87,6 +87,7 @@ export default function Menu1Page() {
             }
         } catch (e) {
             console.error("Error regenerating image:", e);
+            setError("An unexpected error occurred.");
         } finally {
             setGlobalLoading(false); // Set global loading to false
             setActionLoading((prev) => ({
@@ -120,6 +121,7 @@ export default function Menu1Page() {
             }
         } catch (error) {
             console.error("Error regenerating content:", error);
+            setError("Error regenerating content:");
         } finally {
             setGlobalLoading(false); // Set global loading to false
             setActionLoading((prev) => ({
@@ -144,6 +146,7 @@ export default function Menu1Page() {
             }
         } catch (error) {
             console.error('Error scheduling time:', error);
+            setError("Error scheduling time.");
         } finally {
             setGlobalLoading(false)
         }
@@ -164,6 +167,7 @@ export default function Menu1Page() {
             }
         } catch (error) {
             console.error("Error deleting post:", error);
+            setError("Error deleting post:");
         } finally {
             setGlobalLoading(false); // Set global loading to false
             setActionLoading((prev) => ({

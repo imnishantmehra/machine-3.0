@@ -54,6 +54,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { generateCustomScripts, getAllCampaigns, Service } from "@/components/Service";
 import { toast } from "sonner";
+import { ErrorDialog } from "@/components/ErrorDialog";
 
 const SAMPLE_AUTHOR_PROFILES = [
     {
@@ -177,6 +178,8 @@ export default function Dashboard() {
     );
     const [savedProfiles, setSavedProfiles] = useState(SAMPLE_AUTHOR_PROFILES);
     const [checkedProfiles, setCheckedProfiles] = useState<string[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showErrorDialog, setShowErrorDialog] = useState(false);
 
     const searchParams = useSearchParams();
     const tabParam = searchParams.get("tab");
@@ -330,8 +333,10 @@ export default function Dashboard() {
                     alert("Failed to extract content from the source file.");
                 }
             } catch (error) {
-                console.error("Error during /extract_content API call:", error);
-                alert("An error occurred while extracting content. Please try again.");
+                console.error("An error occurred while extracting content. Please try again.", error);
+                setErrorMessage("An error occurred while extracting content.");
+                setShowErrorDialog(true); // Show dialog
+                // alert("An error occurred while extracting content. Please try again.");
             } finally {
                 setIsRegenerating(false);
             }
@@ -519,6 +524,9 @@ export default function Dashboard() {
             alert(
                 "An error occurred while generating custom scripts. Please try again."
             );
+            console.error("An error occurred while generating custom scripts.", error);
+            setErrorMessage("An error occurred while generating custom scripts.");
+            setShowErrorDialog(true); // Show dialog
         }
 
         setIsRegeneratingPlan(false);
@@ -687,12 +695,17 @@ export default function Dashboard() {
                 setMainIdeas(newMainIdeas);
                 setSubTopics(newSubTopics);
             } else {
-                console.warn("Unexpected API response format:", response);
-                alert("Failed to extract content from the source file.");
+                // Handle the error case, optionally show a message to the user
+                console.error("Failed to generate ideas:", response.message);
+                setErrorMessage(response.message || "Failed to extract content from the source file.");
+                setShowErrorDialog(true); // Show dialog
             }
         } catch (error) {
-            console.error("Error during /extract_content API call:", error);
-            alert("An error occurred while extracting content. Please try again.");
+            console.error("Error during extract_content API call:", error);
+            // alert("An error occurred while extracting content. Please try again.");
+            console.error("An error occurred while extracting content.", error);
+            setErrorMessage("An error occurred while extracting content.");
+            setShowErrorDialog(true); // Show dialog
         } finally {
             setIsRegenerating(false);
             setCurrentStep(2);
@@ -1808,6 +1821,12 @@ export default function Dashboard() {
                             </Card>
                         </TabsContent>
                     </Tabs>
+
+                    <ErrorDialog
+                        isOpen={showErrorDialog}
+                        onClose={() => setShowErrorDialog(false)}
+                        message={errorMessage || ''}
+                    />
 
                     <ContentModificationModal
                         isOpen={isModificationModalOpen}

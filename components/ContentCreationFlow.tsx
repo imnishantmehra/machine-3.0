@@ -170,9 +170,31 @@ export function ContentCreationFlow({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleRegenerateIdeas = () => {
-    console.log("Regenerating content ideas based on:", selectedItems);
-    setContentIdeas((prev) => [...prev].reverse());
+  const handleRegenerateIdeas = async () => {
+    try {
+      setIsLoading(true);
+      const response = await generateIdeas();
+
+      if (response.status === 'success') {
+        setIdeas(response.message.ideas); // Update the ideas in the UI
+
+        const data = localStorage.getItem("contentGenPayload") || "{}";
+        const parsed = JSON.parse(data);
+        const newData = { ...parsed, ideas: response.message.ideas?.map(item => item) };
+        localStorage.setItem("contentGenPayload", JSON.stringify(newData));
+      } else {
+        // Handle the error case, optionally show a message to the user
+        console.error("Failed to generate ideas:", response.message);
+        setErrorMessage(response.message || "Unexpected error occurred.");
+        setShowErrorDialog(true); // Show dialog
+      }
+    } catch (error) {
+      console.error("Unexpected error in handleNextStep:", error);
+      setErrorMessage("Something went wrong while generating ideas.");
+      setShowErrorDialog(true); // Show dialog
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRemoveIdea = (ideaId: string) => {
@@ -214,7 +236,10 @@ export function ContentCreationFlow({
       }
     } catch (error) {
       console.error("Error regenerating content:", error);
-    } finally {
+      setErrorMessage("Error regenerating content.");
+      setShowErrorDialog(true); // Show dialog
+    }
+    finally {
       setRegeneratingContent(null);
     }
   };
@@ -243,9 +268,16 @@ export function ContentCreationFlow({
           });
           return updatedIdeas;
         });
+      } else {
+        // Handle the error case, optionally show a message to the user
+        console.error("Failed to regenerate images:", response.message);
+        setErrorMessage(response.message || "Failed to regenerate images.");
+        setShowErrorDialog(true); // Show dialog
       }
     } catch (e) {
-      console.error("Error regenerating image:", e);
+      console.error("Failed to regenerate images:", e);
+      setErrorMessage("Failed to regenerate images.");
+      setShowErrorDialog(true); // Show dialog
     } finally {
       setRegeneratingImage(null);
     }
