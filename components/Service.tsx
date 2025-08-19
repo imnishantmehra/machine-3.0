@@ -1332,7 +1332,50 @@ export const generateCustomScripts = async (
   return await Service(endpoint, "POST", formData, queryParams);
 };
 
-(async () => {
+// (async () => {
+//   try {
+//     const fileInput = document.createElement("input");
+//     fileInput.type = "file";
+
+//     fileInput.onchange = async (event: Event) => {
+//       const file = (event.target as HTMLInputElement)?.files?.[0];
+//       if (!file) {
+//         console.error("No file selected!");
+//         return;
+//       }
+
+//       const weeks = Number(prompt("Enter the number of weeks:", "1"));
+//       const days = prompt("Enter the days (comma-separated):", "Monday,Tuesday")
+//         ?.split(",")
+//         .map((day) => day.trim()) || ["Monday"];
+//       const platformPosts = prompt(
+//         'Enter platform posts as JSON (e.g., {"instagram": 1}):',
+//         '{"instagram": 1}'
+//       );
+//       const platformPostsObj = platformPosts ? JSON.parse(platformPosts) : {};
+
+//       const extractedContent = await extractContent(file, weeks, days[0]);
+
+//       const customScripts = await generateCustomScripts(
+//         file,
+//         weeks,
+//         days,
+//         platformPostsObj
+//       );
+//     };
+
+//     fileInput.click();
+//   } catch (error) {
+//     console.error("Error during API calls:", error);
+//   }
+// })();
+
+export const handleFileUpload = async () => {
+  if (typeof document === "undefined") {
+    console.warn("Cannot run file upload logic on the server.");
+    return;
+  }
+
   try {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -1355,7 +1398,6 @@ export const generateCustomScripts = async (
       const platformPostsObj = platformPosts ? JSON.parse(platformPosts) : {};
 
       const extractedContent = await extractContent(file, weeks, days[0]);
-
       const customScripts = await generateCustomScripts(
         file,
         weeks,
@@ -1368,7 +1410,7 @@ export const generateCustomScripts = async (
   } catch (error) {
     console.error("Error during API calls:", error);
   }
-})();
+};
 
 /**
  * Call the /regenerate_script_v1 endpoint
